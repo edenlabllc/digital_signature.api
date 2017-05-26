@@ -1,0 +1,36 @@
+defmodule DigitalSignatureApi.Web.FallbackController do
+  @moduledoc """
+  This controller should be used as `action_fallback` in rest of controllers to remove duplicated error handling.
+  """
+  use DigitalSignatureApi.Web, :controller
+
+  def call(conn, {:error, :bad_request}) do
+    conn
+    |> put_status(:bad_request)
+    |> render(EView.Views.Error, :"400")
+  end
+
+  def call(conn, {:error, :access_denied}) do
+    conn
+    |> put_status(:unauthorized)
+    |> render(EView.Views.Error, :"401")
+  end
+
+  def call(conn, {:error, :not_found}) do
+    conn
+    |> put_status(:not_found)
+    |> render(EView.Views.Error, :"404")
+  end
+
+  def call(conn, nil) do
+    conn
+    |> put_status(:not_found)
+    |> render(EView.Views.Error, :"404")
+  end
+
+  def call(conn, {:error, validation_errors}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> render(EView.Views.ValidationError, :"422", schema: validation_errors)
+  end
+end
