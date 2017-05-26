@@ -10,6 +10,8 @@ ENV MIX_ENV=prod \
 
 WORKDIR ${HOME}
 
+RUN apk --update add gcc make libc-dev libgcc && rm -rf /var/cache/apk/*
+
 # Install and compile project dependencies
 COPY mix.* ./
 RUN mix do deps.get, deps.compile
