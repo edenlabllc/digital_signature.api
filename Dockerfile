@@ -12,6 +12,11 @@ WORKDIR ${HOME}
 
 RUN apk --update add gcc make libc-dev libgcc && rm -rf /var/cache/apk/*
 
+RUN apk update && apk add ca-certificates && update-ca-certificates && apk add openssl && \
+    wget -q -O /etc/apk/keys/sgerrand.rsa.pub http://raw.githubusercontent.com/sgerrand/alpine-pkg-glibc/master/sgerrand.rsa.pub && \
+    wget http://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.25-r0/glibc-2.25-r0.apk && \
+    apk add glibc-2.25-r0.apk
+
 # Install and compile project dependencies
 COPY mix.* ./
 RUN mix do deps.get, deps.compile
