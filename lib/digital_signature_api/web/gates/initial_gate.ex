@@ -1,4 +1,4 @@
-defmodule DigitalSignatureApi.Web.InitialGate do
+defmodule DigitalSignature.Web.InitialGate do
   @moduledoc """
   Sample compatibility layer for generated application.
   See https://github.com/Nebo15/multiverse for more information.

@@ -1,4 +1,4 @@
-defmodule DigitalSignatureApi.Cert do
+defmodule DigitalSignature.Cert do
   @moduledoc false
 
   use Ecto.Schema

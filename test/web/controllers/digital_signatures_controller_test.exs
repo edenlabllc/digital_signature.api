@@ -1,5 +1,5 @@
-defmodule DigitalSignatureApi.Web.DigitalSignaturesControllerTest do
-  use DigitalSignatureApi.Web.ConnCase
+defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
+  use DigitalSignature.Web.ConnCase
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}

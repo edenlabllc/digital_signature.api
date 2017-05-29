@@ -28,11 +28,11 @@ use Mix.Config
 
 # General application configuration
 config :digital_signature_api,
-  ecto_repos: [DigitalSignatureApi.Repo],
-  namespace: DigitalSignatureApi
+  ecto_repos: [DigitalSignature.Repo],
+  namespace: DigitalSignature
 
 # Configures the endpoint
-config :digital_signature_api, DigitalSignatureApi.Web.Endpoint,
+config :digital_signature_api, DigitalSignature.Web.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "kM4g3grYc77xl0Zglf381h8g6EgOBSH18TbWwMB1UCdWHxFFkIZcF8Ci3w9ZtLCF",
   render_errors: [view: EView.Views.PhoenixError, accepts: ~w(json)]
@@ -44,7 +44,7 @@ config :logger, :console,
 
 # Configure JSON Logger back-end
 config :logger_json, :backend,
-  on_init: {DigitalSignatureApi, :load_from_system_env, []},
+  on_init: {DigitalSignature, :load_from_system_env, []},
   json_encoder: Poison,
   metadata: :all
 

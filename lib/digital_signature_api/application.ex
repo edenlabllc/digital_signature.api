@@ -1,9 +1,9 @@
-defmodule DigitalSignatureApi do
+defmodule DigitalSignature do
   @moduledoc """
   This is an entry point of digital_signature application.
   """
   use Application
-  alias DigitalSignatureApi.Web.Endpoint
+  alias DigitalSignature.Web.Endpoint
 
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
   # for more information on OTP Applications
@@ -16,16 +16,16 @@ defmodule DigitalSignatureApi do
     # Define workers and child supervisors to be supervised
     children = [
       # Start the Ecto repository
-      supervisor(DigitalSignatureApi.Repo, []),
+      supervisor(DigitalSignature.Repo, []),
       # Start the endpoint when the application starts
-      supervisor(DigitalSignatureApi.Web.Endpoint, []),
-      # Starts a worker by calling: DigitalSignatureApi.Worker.start_link(arg1, arg2, arg3)
-      # worker(DigitalSignatureApi.Worker, [arg1, arg2, arg3]),
+      supervisor(DigitalSignature.Web.Endpoint, []),
+      # Starts a worker by calling: DigitalSignature.Worker.start_link(arg1, arg2, arg3)
+      # worker(DigitalSignature.Worker, [arg1, arg2, arg3]),
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
     # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: DigitalSignatureApi.Supervisor]
+    opts = [strategy: :one_for_one, name: DigitalSignature.Supervisor]
     Supervisor.start_link(children, opts)
   end
 

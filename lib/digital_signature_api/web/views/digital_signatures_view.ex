@@ -1,6 +1,6 @@
-defmodule DigitalSignatureApi.Web.DigitalSignaturesView do
+defmodule DigitalSignature.Web.DigitalSignaturesView do
   @moduledoc false
-  use DigitalSignatureApi.Web, :view
+  use DigitalSignature.Web, :view
 
   def render("digital_signature.json", %{digital_signature_info: digital_signature_info}), do: digital_signature_info
 end

@@ -1,8 +1,8 @@
-defmodule DigitalSignatureApi.Web.FallbackController do
+defmodule DigitalSignature.Web.FallbackController do
   @moduledoc """
   This controller should be used as `action_fallback` in rest of controllers to remove duplicated error handling.
   """
-  use DigitalSignatureApi.Web, :controller
+  use DigitalSignature.Web, :controller
 
   def call(conn, {:error, :bad_request}) do
     conn

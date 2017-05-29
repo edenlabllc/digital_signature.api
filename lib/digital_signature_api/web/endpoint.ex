@@ -1,4 +1,4 @@
-defmodule DigitalSignatureApi.Web.Endpoint do
+defmodule DigitalSignature.Web.Endpoint do
   @moduledoc """
   Phoenix Endpoint for digital_signature application.
   """
@@ -18,7 +18,7 @@ defmodule DigitalSignatureApi.Web.Endpoint do
   plug Plug.MethodOverride
   plug Plug.Head
 
-  plug DigitalSignatureApi.Web.Router
+  plug DigitalSignature.Web.Router
 
   @doc """
   Dynamically loads configuration from the system environment

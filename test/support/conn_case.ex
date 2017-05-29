@@ -1,4 +1,4 @@
-defmodule DigitalSignatureApi.Web.ConnCase do
+defmodule DigitalSignature.Web.ConnCase do
   @moduledoc """
   This module defines the test case to be used by
   tests that require setting up a connection.
@@ -18,10 +18,10 @@ defmodule DigitalSignatureApi.Web.ConnCase do
     quote do
       # Import conveniences for testing with connections
       use Phoenix.ConnTest
-      import DigitalSignatureApi.Web.Router.Helpers
+      import DigitalSignature.Web.Router.Helpers
 
       # The default endpoint for testing
-      @endpoint DigitalSignatureApi.Web.Endpoint
+      @endpoint DigitalSignature.Web.Endpoint
     end
   end
 

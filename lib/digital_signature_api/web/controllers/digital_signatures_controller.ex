@@ -1,10 +1,10 @@
-defmodule DigitalSignatureApi.Web.DigitalSignaturesController do
+defmodule DigitalSignature.Web.DigitalSignaturesController do
   @moduledoc false
-  use DigitalSignatureApi.Web, :controller
+  use DigitalSignature.Web, :controller
   use JValid
-  alias DigitalSignatureApi.Cert.API, as: CertAPI
+  alias DigitalSignature.Cert.API, as: CertAPI
 
-  action_fallback DigitalSignatureApi.Web.FallbackController
+  action_fallback DigitalSignature.Web.FallbackController
 
   use_schema :digital_signatures, "specs/json_schemas/digital_signatures_request.json"
 

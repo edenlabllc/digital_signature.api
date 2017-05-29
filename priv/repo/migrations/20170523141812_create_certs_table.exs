@@ -1,4 +1,4 @@
-defmodule DigitalSignatureApi.Repo.Migrations.CreateCertsTable do
+defmodule DigitalSignature.Repo.Migrations.CreateCertsTable do
   use Ecto.Migration
 
   def change do

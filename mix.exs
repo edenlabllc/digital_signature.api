@@ -1,4 +1,4 @@
-defmodule DigitalSignatureApi.Mixfile do
+defmodule DigitalSignature.Mixfile do
   use Mix.Project
 
   @version "0.1.0"
@@ -28,7 +28,7 @@ defmodule DigitalSignatureApi.Mixfile do
                           :cowboy, :httpoison, :ecto, :ecto_paging, :postgrex,
                           :phoenix, :multiverse,
                           :eview],
-     mod: {DigitalSignatureApi, []}]
+     mod: {DigitalSignature, []}]
   end
 
   # Specifies which paths to compile per environment.

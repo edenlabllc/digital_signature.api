@@ -3,10 +3,9 @@ use Mix.Config
 # Configuration for test environment
 config :ex_unit, capture_log: true
 
-
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
-config :digital_signature_api, DigitalSignatureApi.Web.Endpoint,
+config :digital_signature_api, DigitalSignature.Web.Endpoint,
   http: [port: 4001],
   server: true
 
@@ -17,7 +16,7 @@ config :logger, level: :warn
 config :digital_signature_api, sql_sandbox: true
 
 # Configure your database
-config :digital_signature_api, DigitalSignatureApi.Repo,
+config :digital_signature_api, DigitalSignature.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: "postgres",
   password: "postgres",
