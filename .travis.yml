@@ -7,6 +7,12 @@ services:
   - postgresql
 addons:
   postgresql: "9.5"
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - gcc-5
+    - g++-5
 elixir:
   - 1.4.2
 otp_release:
