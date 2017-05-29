@@ -1,5 +1,4 @@
 language: elixir
-sudo: required
 cache:
   directories:
     - deps
