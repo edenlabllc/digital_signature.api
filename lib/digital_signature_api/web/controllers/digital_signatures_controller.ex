@@ -3,6 +3,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
   use DigitalSignature.Web, :controller
   use JValid
   alias DigitalSignature.Cert.API, as: CertAPI
+  require Logger
 
   action_fallback DigitalSignature.Web.FallbackController
 
@@ -30,7 +31,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
     render(conn, "digital_signature.json", digital_signature_info: digital_signature_info)
   end
 
-  defp process_result({:error, _error}), do: {:error, :bad_request}
+  defp process_result({:error, error}), do: Logger.error(error)
   defp process_result({:ok, result}) do
     result
     |> Map.update!(:content, &process_content/1)

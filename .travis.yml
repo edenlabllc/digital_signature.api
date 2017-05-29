@@ -7,12 +7,6 @@ services:
   - postgresql
 addons:
   postgresql: "9.5"
-  apt:
-    sources:
-    - ubuntu-toolchain-r-test
-    packages:
-    - gcc-5
-    - g++-5
 elixir:
   - 1.4.2
 otp_release:
@@ -56,8 +50,6 @@ script:
       docker logs digital_signature_api --details --since 5h;
       exit 1;
     fi;
-  # Run acceptance tests on Docker container
-  - "CONTAINER_HTTP_HOST=localhost CONTAINER_HTTP_PORT=4000 mix test test/acceptance"
 after_failure:
   - docker logs digital_signature_api --details --since 5h
 after_success:
