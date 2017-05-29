@@ -12,10 +12,16 @@ WORKDIR ${HOME}
 
 RUN apk --update add gcc make libc-dev libgcc && rm -rf /var/cache/apk/*
 
-RUN apk update && apk add ca-certificates && update-ca-certificates && apk add openssl && \
-    wget -q -O /etc/apk/keys/sgerrand.rsa.pub http://raw.githubusercontent.com/sgerrand/alpine-pkg-glibc/master/sgerrand.rsa.pub && \
-    wget http://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.25-r0/glibc-2.25-r0.apk && \
-    apk add glibc-2.25-r0.apk
+RUN apk update && apk upgrade && \
+    mkdir -p /etc/BUILDS/ && \
+    apk add curl && \
+    curl -L -o glibc-2.25-r0.apk \
+      "https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.25-r0/glibc-2.25-r0.apk" && \
+    curl -L -o glibc-bin-2.25-r0.apk \
+      "https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.25-r0/glibc-bin-2.25-r0.apk" && \
+    apk add --allow-untrusted glibc-2.25-r0.apk glibc-bin-2.25-r0.apk && \
+    apk del curl && \
+    rm -fr glibc-2.25-r0.apk glibc-bin-2.25-r0.apk /var/cache/apk/* 
 
 # Install and compile project dependencies
 COPY mix.* ./
