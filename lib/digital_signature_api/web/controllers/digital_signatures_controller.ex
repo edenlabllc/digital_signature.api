@@ -49,5 +49,5 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
   end
 
   defp return_content({:ok, decoded_content}, _content), do: decoded_content
-  defp return_content({:error, _error, _pos}, content), do: content
+  defp return_content(_error, content), do: content
 end
