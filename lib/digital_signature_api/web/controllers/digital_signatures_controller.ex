@@ -43,7 +43,6 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
 
   defp process_content(content) do
     content
-    |> String.replace("\u007f", "") # TODO: fix this bug in a normal way
     |> Poison.decode()
     |> return_content(content)
   end
