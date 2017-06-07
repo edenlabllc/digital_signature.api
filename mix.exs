@@ -27,7 +27,7 @@ defmodule DigitalSignature.Mixfile do
     [extra_applications: [:logger, :confex, :runtime_tools, :logger_json, :poison,
                           :cowboy, :httpoison, :ecto, :ecto_paging, :postgrex,
                           :phoenix, :multiverse,
-                          :eview],
+                          :eview, :runtime_tools],
      mod: {DigitalSignature, []}]
   end
 
