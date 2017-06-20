@@ -5,6 +5,8 @@ MAINTAINER Nebo#15 support@nebo15.com
 
 ENV DEBIAN_FRONTEND noninteractive
 
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+
 RUN apt-get update && apt-get install -y locales
 
 # Set LOCALE to UTF8
