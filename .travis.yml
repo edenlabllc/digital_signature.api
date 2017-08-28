@@ -11,8 +11,14 @@ elixir:
   - 1.4.2
 otp_release:
   - 19.3
+notifications:
+  slack: 
+    rooms:
+      - secure: "FT8IBl8IzXpiIb8zYcJUbPglkHQ4pQM/zRYVoWlybjmmUi45In52byvPgCdYKHee/ZaqnE230t0tbf06GZGyKZ+OGfTd1zn84yYL0vCocxofVDQSsfJmrLigX6loCZ54GB3CSvhfWRKUdFYRDhQ6vSLlZCuTx31bAINFAJG2Vb/bAbOLtjKf89TANfECTUZ3C+FOykBwbdo3y/5635ErDTb5CGVhRaNmWnwxInmrlaRsO/mpYC1MtbOjHfup292m2Blv67iv6vpGtpD80a/VuJws2Dtpg9quGJQrD0EC5v1Q1I1MKkPwuVLdH5anR+hVqaECaj0EtPgrA1nW1RxFt7joobYT4VjWYoMV1oXZ0Ze+zeUeIWJULVd/2E8a61zX7Ge/uZZBfjTIxILF8ZG0fsOGfnakbP7Q9fF53vjIJs0WqjyYRXehWdxdy2/G1woMu0BBB8AQsdPTNaoNblrv2zPqpSUmQROMDeHIDFSyt6mHhryRZfYcrwJPeNOzIyHhSTiMxO6KZxmKCfzzl11hWSLRn+PdAgTHMwOhWc9SyPkcIRlLZZ2BeFWtoLX/4JnlH5UGsogB8fR5vmz//nl7mWJkbIzXA8lpqHPzdUzytNw0qNiZ6729EJ7N8dB+hdvVJMwhPXelgRcqBf60v1Q9kR9/BUqlVCm8axcKNxgY8T4="
+    on_success: always
 env:
   global:
+    - Chart=digital-signature
     - MIX_ENV=test
     - DOCKER_HUB_ACCOUNT=edenlabllc
     - MAIN_BRANCHES="master develop staging" # Branches on which you want version to be incremented
@@ -26,6 +32,7 @@ branches:
     - /[0-9]*\.[0-9]*\.[0-9]*/
 before_install:
   # Expose DB to Docker container
+  - openssl aes-256-cbc -K $encrypted_290de45993da_key -iv $encrypted_290de45993da_iv -in eHealth-eef414faa06b.json.enc -out eHealth-eef414faa06b.json -d
   - sudo ./bin/ci/init-db.sh
 script:
   # Increment version in mix.exs
@@ -39,21 +46,10 @@ script:
   # Check code style
   - mix dogma
   # Build Docker container
-  - ./bin/build.sh
+  - ./bin/build.sh || travis_terminate 1
   # Initialize DB for Docker container
   - MIX_ENV=dev mix ecto.setup
   # Run Docker container
-  - sudo ./bin/start.sh
-  - sleep 5
-  - docker ps
-  - RUNNING_CONTAINERS=`docker ps | wc -l`;
-    if [ "${RUNNING_CONTAINERS//[[:space:]]/}" == "1" ]; then
-      echo "[E] Container is not started\!";
-      docker logs digital_signature_api --details --since 5h;
-      exit 1;
-    fi;
-after_failure:
-  - docker logs digital_signature_api --details --since 5h
-after_success:
-  # Submit Docker container to Docker Hub and create GitHub Release by pushing tag with changelog
-  - ./bin/ci/push.sh
+  - sudo ./bin/start.sh || travis_terminate 1
+  - ./bin/ci/push.sh || travis_terminate 1
+  - sudo ./bin/deploy.sh || travis_terminate 1

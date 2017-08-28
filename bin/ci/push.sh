@@ -1,7 +1,6 @@
 #!/bin/bash
 # This setup works with Travis-CI.
 # You need to specify $DOCKER_HUB_ACCOUNT, $DOCKER_USERNAME and $DOCKER_PASSWORD before using this script.
-
 echo "Logging in into Docker Hub";
 docker login -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD;
 
@@ -22,11 +21,16 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
 
   if [ "$TRAVIS_BRANCH" == "$RELEASE_BRANCH" ]; then
     ./bin/ci/release.sh -a $DOCKER_HUB_ACCOUNT -t $TRAVIS_BRANCH -l;
+      if [ "$?" -eq 0 ]; then
+            exit 0;
+          else 
+            exit 1;
+      fi;
   fi;
 
   if [[ "$MAIN_BRANCHES" =~ "$TRAVIS_BRANCH" ]]; then
     echo "Done. Pushing changes back to repo.";
-    git push upstream HEAD:$TRAVIS_BRANCH &> /dev/null;
-    git push upstream HEAD:$TRAVIS_BRANCH --tags &> /dev/null;
+    git push upstream HEAD:$TRAVIS_BRANCH;
+    git push upstream HEAD:$TRAVIS_BRANCH --tags;
   fi;
 fi;
