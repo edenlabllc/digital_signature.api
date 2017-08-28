@@ -17,8 +17,8 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
 			cd ehealth.charts
 #get version and project name
 			PROJECT_NAME=$(sed -n 's/.*app: :\([^, ]*\).*/\1/pg' "$TRAVIS_BUILD_DIR/mix.exs")
-			#PROJECT_VERSION=$(sed -n 's/.*@version "\([^"]*\)".*/\1/pg' "$TRAVIS_BUILD_DIR/mix.exs")
-			PROJECT_VERSION="0.1.261"
+			PROJECT_VERSION=$(sed -n 's/.*@version "\([^"]*\)".*/\1/pg' "$TRAVIS_BUILD_DIR/mix.exs")
+			#PROJECT_VERSION="0.1.261"
 			sed -i'' -e "1,10s/tag:.*/tag: \"$PROJECT_VERSION\"/g" "$Chart/values.yaml"
 			helm init --upgrade
 			sleep 15
