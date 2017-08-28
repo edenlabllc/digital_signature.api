@@ -27,7 +27,7 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
 			./wait-for-deployment.sh api $Chart 180
    				if [ "$?" -eq 0 ]; then
      				kubectl get pod -n$Chart | grep api 
-     				cd $TRAVIS_BUILD_DIR/ehealth.charts && git add . && sudo  git commit -m "Bump $Chart version $PROJECT_VERSION" && sudo git pull && sudo git push
+     				cd $TRAVIS_BUILD_DIR/ehealth.charts && git add . && sudo  git commit -m "Bump $Chart api to $PROJECT_VERSION" && sudo git pull && sudo git push
      				exit 0;
    				else 
    	 				kubectl logs $(sudo kubectl get pod -n$Chart | awk '{ print $1 }' | grep api) -n$Chart 

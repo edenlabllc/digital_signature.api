@@ -20,14 +20,14 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
   git add mix.exs;
   git commit -m "Increment version [ci skip]";
 
-  if [ "$TRAVIS_BRANCH" == "$RELEASE_BRANCH" ]; then
-    ./bin/ci/release.sh -a $DOCKER_HUB_ACCOUNT -t $TRAVIS_BRANCH -l;
+   if [ "$TRAVIS_BRANCH" == "$RELEASE_BRANCH" ]; then
+     ./bin/ci/release.sh -a $DOCKER_HUB_ACCOUNT -t $TRAVIS_BRANCH -l;
          if [ "$?" -eq 0 ]; then
              exit 0;
            else 
              exit 1;
          fi;
-  fi;
+   fi;
 
   if [[ "$MAIN_BRANCHES" =~ "$TRAVIS_BRANCH" ]]; then
     echo "Done. Pushing changes back to repo.";
