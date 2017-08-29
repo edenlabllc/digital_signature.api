@@ -18,13 +18,20 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
     end
   end
 
+  defp get_check_value(params) do
+    case Map.get(params, "check") do
+      false -> 0
+      _ -> 1
+    end
+  end
+
   defp process_signed_data(:error, _conn, _params) do
     {:error, [{%{description: "not a base64 string", params: [], rule: :invalid}, "$.signed_content"}]}
   end
   defp process_signed_data({:ok, signed_content}, conn, params) do
     signed_content
     |> :erlang.binary_to_list()
-    |> :digital_signature_lib.processPKCS7Data(CertAPI.get_certs_map())
+    |> :digital_signature_lib.processPKCS7Data(CertAPI.get_certs_map(), get_check_value(params))
     |> process_result()
     |> render_response(params, conn)
   end
@@ -49,6 +56,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
 
   defp process_is_valid({:ok, %{is_valid: 1} = result}), do: {:ok, Map.put(result, :is_valid, true)}
   defp process_is_valid({:ok, %{is_valid: 0} = result}), do: {:ok, Map.put(result, :is_valid, false)}
+  defp process_is_valid({:ok, result}), do: {:ok, result}
   defp process_is_valid({:error, error}), do: {:error, error}
 
   defp return_content({:ok, decoded_content}, _content), do: {:ok, decoded_content}
