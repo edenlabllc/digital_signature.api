@@ -32,7 +32,6 @@ branches:
     - /[0-9]*\.[0-9]*\.[0-9]*/
 before_install:
   # Expose DB to Docker container
-  - openssl aes-256-cbc -K $encrypted_290de45993da_key -iv $encrypted_290de45993da_iv -in eHealth-eef414faa06b.json.enc -out eHealth-eef414faa06b.json -d
   - sudo ./bin/ci/init-db.sh
 script:
   # Increment version in mix.exs
@@ -46,4 +45,5 @@ script:
   # Run Docker container
   - sudo ./bin/start.sh || travis_terminate 1
   - ./bin/ci/push.sh || travis_terminate 1
+  - openssl aes-256-cbc -K $encrypted_134bca1e162b_key -iv $encrypted_134bca1e162b_iv -in eHealth-8110bd102a69.json.enc -out eHealth-8110bd102a69.json -d
   - sudo ./bin/deploy.sh || travis_terminate 1
