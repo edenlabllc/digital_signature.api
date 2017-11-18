@@ -24,7 +24,7 @@ defmodule DigitalSignature.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [extra_applications: [:logger, :confex, :runtime_tools, :logger_json, :poison,
+    [extra_applications: [:logger, :confex, :runtime_tools, :poison,
                           :cowboy, :httpoison, :ecto, :ecto_paging, :postgrex,
                           :phoenix, :multiverse,
                           :eview, :runtime_tools],
@@ -51,7 +51,6 @@ defmodule DigitalSignature.Mixfile do
   defp deps do
     [{:distillery, "~> 1.2"},
      {:confex, "~> 1.4"},
-     {:logger_json, "~> 0.3.0"},
      {:poison, "~> 3.1"},
      {:ecto, "~> 2.1"},
      {:ecto_paging, ">= 0.0.0"},
@@ -61,6 +60,8 @@ defmodule DigitalSignature.Mixfile do
      {:phoenix, "~> 1.3.0-rc"},
      {:multiverse, "~> 0.4.3"},
      {:eview, "~> 0.11.0"},
+     {:plug_logger_json, "~> 0.5"},
+     {:ecto_logger_json, "~> 0.1"},
      {:benchfella, ">= 0.3.4", only: [:dev, :test]},
      {:ex_doc, ">= 0.15.0", only: [:dev, :test]},
      {:excoveralls, ">= 0.5.0", only: [:dev, :test]},

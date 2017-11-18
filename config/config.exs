@@ -38,15 +38,7 @@ config :digital_signature_api, DigitalSignature.Web.Endpoint,
   render_errors: [view: EView.Views.PhoenixError, accepts: ~w(json)]
 
 # Configures Elixir's Logger
-config :logger, :console,
-  format: "$time $metadata[$level] $message\n",
-  metadata: [:request_id]
-
-# Configure JSON Logger back-end
-config :logger_json, :backend,
-  on_init: {DigitalSignature, :load_from_system_env, []},
-  json_encoder: Poison,
-  metadata: :all
+config :logger, :console, format: "$message\n", level: :info
 
 # It is also possible to import configuration files, relative to this
 # directory. For example, you can emulate configuration per environment
