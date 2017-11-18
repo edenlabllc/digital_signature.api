@@ -7,6 +7,11 @@ defmodule DigitalSignature.Web.Router do
   More info at: https://hexdocs.pm/phoenix/Phoenix.Router.html
   """
   use DigitalSignature.Web, :router
+  use Plug.ErrorHandler
+
+  alias Plug.LoggerJSON
+
+  require Logger
 
   pipeline :api do
     plug :accepts, ["json"]
@@ -26,4 +31,11 @@ defmodule DigitalSignature.Web.Router do
 
     post "/digital_signatures", DigitalSignaturesController, :index
   end
+
+  defp handle_errors(%Plug.Conn{status: 500} = conn, %{kind: kind, reason: reason, stack: stacktrace}) do
+    LoggerJSON.log_error(kind, reason, stacktrace)
+    send_resp(conn, 500, Poison.encode!(%{errors: %{detail: "Internal server error"}}))
+  end
+
+  defp handle_errors(_, _), do: nil
 end

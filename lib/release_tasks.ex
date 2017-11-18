@@ -8,7 +8,6 @@ defmodule DigitalSignature.ReleaseTasks do
 
   @start_apps [
     :logger,
-    :logger_json,
     :postgrex,
     :ecto
   ]
