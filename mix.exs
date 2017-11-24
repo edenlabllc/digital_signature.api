@@ -8,7 +8,7 @@ defmodule DigitalSignature.Mixfile do
      description: "This api allows to validate pkcs7 data and get unpacked data with signer information from it.",
      package: package(),
      version: @version,
-     elixir: "~> 1.4",
+     elixir: "~> 1.5",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix] ++ Mix.compilers,
      build_embedded: Mix.env == :prod,
@@ -49,7 +49,7 @@ defmodule DigitalSignature.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:distillery, "~> 1.4"},
+    [{:distillery, "1.4.1"},
      {:confex, "~> 1.4"},
      {:poison, "~> 3.1"},
      {:ecto, "~> 2.1"},
