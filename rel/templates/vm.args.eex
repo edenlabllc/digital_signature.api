@@ -8,7 +8,7 @@
 -smp auto
 
 # Sets scheduler-forced wakeup interval
-#-sfwi 500
+-sfwi 500
 
 # Disables scheduler compaction of load
-#-scl false
+-scl false
