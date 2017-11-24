@@ -6,3 +6,9 @@
 
 # Enable SMP automatically based on availability
 -smp auto
+
+# Sets scheduler-forced wakeup interval
+-sfwi 500
+
+# Disables scheduler compaction of load
+-scl false
