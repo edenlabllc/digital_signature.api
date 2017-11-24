@@ -35,9 +35,10 @@ docker run -p 4000:4000 \
        "${PROJECT_NAME}:${PROJECT_VERSION}"
 sleep 5
 docker ps
-RUNNING_CONTAINERS=`docker ps | wc -l`;
-    if [ "${RUNNING_CONTAINERS//[[:space:]]/}" == "1" ]; then
-      echo "[E] Container is not started\!";
-      docker logs ops --details --since 5h;
-      exit 1;
-    fi;
+RUNNING_CONTAINERS=$(docker ps | wc -l | tr -d '[:space:]');
+
+if [ $RUNNING_CONTAINERS == "1" ]; then
+  echo "[E] Container is not started.";
+  docker logs ${PROJECT_NAME} --details --since 5h;
+  exit 1;
+fi;
