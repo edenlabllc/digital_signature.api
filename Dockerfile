@@ -28,7 +28,8 @@ RUN apk add --no-cache \
       zlib \
       ca-certificates \
       openssl \
-      bash
+      bash \
+      libstdc++
 
 WORKDIR /app
 
