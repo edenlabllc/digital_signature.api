@@ -8,7 +8,7 @@ defmodule DigitalSignature.Mixfile do
      description: "This api allows to validate pkcs7 data and get unpacked data with signer information from it.",
      package: package(),
      version: @version,
-     elixir: "~> 1.4",
+     elixir: "~> 1.5",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix] ++ Mix.compilers,
      build_embedded: Mix.env == :prod,
@@ -26,7 +26,7 @@ defmodule DigitalSignature.Mixfile do
   def application do
     [extra_applications: [:logger, :confex, :runtime_tools, :poison,
                           :cowboy, :httpoison, :ecto, :ecto_paging, :postgrex,
-                          :phoenix, :multiverse,
+                          :phoenix,
                           :eview, :runtime_tools],
      mod: {DigitalSignature, []}]
   end
@@ -58,12 +58,9 @@ defmodule DigitalSignature.Mixfile do
      {:httpoison, "~> 0.11.1"},
      {:postgrex, ">= 0.0.0"},
      {:phoenix, "~> 1.3.0-rc"},
-     {:multiverse, "~> 0.4.3"},
      {:eview, "~> 0.11.0"},
      {:plug_logger_json, "~> 0.5"},
      {:ecto_logger_json, "~> 0.1"},
-     {:benchfella, ">= 0.3.4", only: [:dev, :test]},
-     {:ex_doc, ">= 0.15.0", only: [:dev, :test]},
      {:excoveralls, ">= 0.5.0", only: [:dev, :test]},
      {:jvalid, "~> 0.5.2"},
      {:digital_signature_lib, git: "https://github.com/Nebo15/digital_signature.lib.git", manager: :rebar},
