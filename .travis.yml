@@ -47,5 +47,6 @@ script:
   - MIX_ENV=dev mix ecto.setup
   # Run Docker container
   - sudo ./bin/start.sh || travis_terminate 1
+  - ./bin/ci/push.sh || travis_terminate 1
   - openssl aes-256-cbc -K $encrypted_134bca1e162b_key -iv $encrypted_134bca1e162b_iv -in eHealth-8110bd102a69.json.enc -out eHealth-8110bd102a69.json -d
   - sudo ./bin/deploy.sh || travis_terminate 1
