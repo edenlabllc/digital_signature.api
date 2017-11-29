@@ -31,7 +31,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
   defp process_signed_data({:ok, signed_content}, conn, params) do
     signed_content
     |> :erlang.binary_to_list()
-    |> :digital_signature_lib.processPKCS7Data(CertAPI.get_certs_map(), get_check_value(params))
+    |> DigitalSignatureLib.processPKCS7Data(CertAPI.get_certs_map(), get_check_value(params))
     |> process_result()
     |> render_response(params, conn)
   end
