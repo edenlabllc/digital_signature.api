@@ -26,7 +26,7 @@ defmodule DigitalSignature.Mixfile do
   def application do
     [extra_applications: [:logger, :confex, :runtime_tools, :poison,
                           :cowboy, :httpoison, :ecto, :ecto_paging, :postgrex,
-                          :phoenix,
+                          :phoenix, :phoenix_pubsub,
                           :eview, :runtime_tools],
      mod: {DigitalSignature, []}]
   end
@@ -49,7 +49,7 @@ defmodule DigitalSignature.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:distillery, "~> 1.4.0"},
+    [{:distillery, "~> 1.5.2"},
      {:confex, "~> 1.4"},
      {:poison, "~> 3.1"},
      {:ecto, "~> 2.1"},

@@ -1,15 +1,34 @@
-FROM edenlabllc/elixir:1.5.2 as builder
+FROM debian:9.2 as builder
 
 ARG APP_NAME
 ARG APP_VERSION
 
-ADD . /app
+RUN apt-get update && apt-get -y install \
+    gcc \
+    autoconf \
+    ragel \
+    make \
+    git \
+    wget \
+    gnupg \
+    locales
 
-WORKDIR /app
+RUN locale-gen en_US.UTF-8
+ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
+
+# Install Elixir
+RUN wget https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb && \
+    DEBIAN_FRONTEND=noninteractive dpkg -i erlang-solutions_1.0_all.deb
+
+RUN apt-get update && apt-get -y install \
+    esl-erlang \
+    elixir
+
+ADD . /home/app
+
+WORKDIR /home/app
 
 ENV MIX_ENV=prod
-
-RUN apk add musl-dev gcc
 
 RUN mix do \
       local.hex --force, \
@@ -18,22 +37,14 @@ RUN mix do \
       deps.compile, \
       release
 
-FROM alpine:edge
+FROM debian:9.2
 
 ARG APP_NAME
 ARG APP_VERSION
 
-RUN apk add --no-cache \
-      ncurses-libs \
-      zlib \
-      ca-certificates \
-      openssl \
-      bash \
-      libstdc++
+WORKDIR /home/app
 
-WORKDIR /app
-
-COPY --from=builder /app/_build/prod/rel/${APP_NAME}/releases/${APP_VERSION}/${APP_NAME}.tar.gz /app
+COPY --from=builder /home/app/_build/prod/rel/${APP_NAME}/releases/${APP_VERSION}/${APP_NAME}.tar.gz /home/app
 
 RUN tar -xzf ${APP_NAME}.tar.gz; rm ${APP_NAME}.tar.gz
 
