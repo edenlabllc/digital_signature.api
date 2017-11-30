@@ -63,7 +63,7 @@ defmodule DigitalSignature.Mixfile do
      {:ecto_logger_json, "~> 0.1"},
      {:excoveralls, ">= 0.5.0", only: [:dev, :test]},
      {:jvalid, "~> 0.5.2"},
-     {:digital_signature_lib, git: "https://github.com/Nebo15/digital_signature.lib.git", manager: :rebar},
+     {:digital_signature_lib, git: "https://github.com/edenlabllc/digital_signature.lib.git", branch: :fixes},
      {:dogma, ">= 0.1.12", only: [:dev, :test]},
      {:credo, ">= 0.5.1", only: [:dev, :test]}]
   end
