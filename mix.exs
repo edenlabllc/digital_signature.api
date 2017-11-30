@@ -49,31 +49,31 @@ defmodule DigitalSignature.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:distillery, "~> 1.4.1"},
-     {:confex, "~> 1.4"},
+    [{:distillery, "~> 1.4.0"},
+     {:confex, "~> 3.3"},
      {:poison, "~> 3.1"},
-     {:ecto, "~> 2.1"},
+     {:ecto, "~> 2.2"},
      {:ecto_paging, ">= 0.0.0"},
      {:cowboy, "~> 1.1"},
-     {:httpoison, "~> 0.11.1"},
+     {:httpoison, "~> 0.13.0"},
      {:postgrex, ">= 0.0.0"},
-     {:phoenix, "~> 1.3.0-rc"},
-     {:eview, "~> 0.11.0"},
+     {:phoenix, "~> 1.3"},
+     {:eview, "~> 0.12.0"},
      {:plug_logger_json, "~> 0.5"},
      {:ecto_logger_json, "~> 0.1"},
      {:excoveralls, ">= 0.5.0", only: [:dev, :test]},
-     {:jvalid, "~> 0.5.2"},
+     {:jvalid, "~> 0.6.0"},
      {:digital_signature_lib, git: "https://github.com/edenlabllc/digital_signature.lib.git", branch: :fixes},
-     {:dogma, ">= 0.1.12", only: [:dev, :test]},
-     {:credo, ">= 0.5.1", only: [:dev, :test]}]
+     {:dogma, ">= 0.1.15", only: [:dev, :test]},
+     {:credo, ">= 0.8.10", only: [:dev, :test]}]
   end
 
   # Settings for publishing in Hex package manager:
   defp package do
-    [contributors: ["Nebo #15"],
-     maintainers: ["Nebo #15"],
+    [contributors: ["edenlab"],
+     maintainers: ["edenlab"],
      licenses: ["LISENSE.md"],
-     links: %{github: "https://github.com/Nebo15/digital_signature.api"},
+     links: %{github: "https://github.com/edenlabllc/digital_signature.api"},
      files: ~w(lib LICENSE.md mix.exs README.md)]
   end
 
