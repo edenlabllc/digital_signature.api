@@ -22,7 +22,7 @@ RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
 
 ENV LANG en_US.UTF-8
 
-# Install Elixir
+# Install Erlang & Elixir
 RUN wget https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb && \
     DEBIAN_FRONTEND=noninteractive dpkg -i erlang-solutions_1.0_all.deb
 
@@ -59,6 +59,14 @@ RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     update-locale LANG=en_US.UTF-8
 
 ENV LANG en_US.UTF-8
+
+# Install Erlang & Elixir
+RUN wget https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb && \
+    DEBIAN_FRONTEND=noninteractive dpkg -i erlang-solutions_1.0_all.deb
+
+RUN apt-get update && apt-get -y install \
+    esl-erlang \
+    elixir
 
 WORKDIR /home/app
 
