@@ -11,23 +11,24 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
 
   def index(conn, params) do
     with :ok <- validate_schema(:digital_signatures, params),
-         {:ok, signed_data} = Base.decode64(Map.get(params, "signed_content")),
+         {:ok, signed_data} <- Base.decode64(Map.get(params, "signed_content")),
          {:ok, result} <- NifService.process_signed_data(signed_data, Map.get(params, "check")),
          {:ok, content} <- Poison.decode(Map.get(result, :content))
     do
-      Map.put(result, :content, content)
-      |> process_is_valid()
-      |> render_response(params, conn)
+        result
+        |> Map.put(:content, content)
+        |> process_is_valid()
+        |> render_response(params, conn)
     else
         {:error, errors} when is_list(errors) ->
-          Enum.each(errors, &Logger.error/1)
+          Enum.each(errors, &Logger.error(IO.inspect(&1)))
           {:error, errors}
         {:error, error} ->
-          Logger.error(error)
+          Logger.error(IO.inspect(error))
           {:error, error}
         :error ->
           error = [{%{description: "Not a base64 string", params: [], rule: :invalid}, "$.signed_content"}]
-          Logger.error(error)
+          Logger.error(IO.inspect(error))
           {:error, error}
     end
   end
