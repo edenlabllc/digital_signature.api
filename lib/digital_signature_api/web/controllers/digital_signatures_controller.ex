@@ -9,54 +9,34 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
 
   use_schema :digital_signatures, "specs/json_schemas/digital_signatures_request.json"
 
-  def index(conn, %{signed_content: signed_content} = params) do
+  def index(conn, params) do
     with :ok <- validate_schema(:digital_signatures, params),
-         {:ok, signed_data} = Base.decode64(signed_content),
-         check = Map.get(params, "check")
+         {:ok, signed_data} = Base.decode64(Map.get(params, "signed_content")),
+         {:ok, result} <- NifService.process_signed_data(signed_data, Map.get(params, "check")),
+         {:ok, content} <- Poison.decode(Map.get(result, :content))
     do
-        signed_data
-        |> NifService.process_signed_data(check)
-        |> process_result()
-        |> render_response(params, conn)
+      Map.put(result, :content, content)
+      |> process_is_valid()
+      |> render_response(params, conn)
     else
-        {:error, reason} -> {:error, reason}
-        :error -> {:error, [{%{description: "Not a base64 string", params: [], rule: :invalid}, "$.signed_content"}]}
+        {:error, errors} when is_list(errors) ->
+          Enum.each(errors, &Logger.error/1)
+          {:error, errors}
+        {:error, error} ->
+          Logger.error(error)
+          {:error, error}
+        :error ->
+          error = [{%{description: "Not a base64 string", params: [], rule: :invalid}, "$.signed_content"}]
+          Logger.error(error)
+          {:error, error}
     end
   end
 
-  defp process_result({:error, error}), do: {:error, error}
-  defp process_result({:ok, %{content: content} = result}) do
-    content
-    |> process_content()
-    |> update_content(result)
-    |> process_is_valid()
-  end
+  defp process_is_valid(%{is_valid: 1} = result), do: Map.put(result, :is_valid, true)
+  defp process_is_valid(%{is_valid: 0} = result), do: Map.put(result, :is_valid, false)
+  defp process_is_valid(result), do: result
 
-  defp process_content(content) do
-    content
-    |> Poison.decode()
-    |> return_content(content)
-  end
-
-  defp update_content({:ok, content}, result), do: {:ok, Map.put(result, :content, content)}
-  defp update_content({:error, error}, _result), do: {:error, error}
-
-  defp process_is_valid({:ok, %{is_valid: 1} = result}), do: {:ok, Map.put(result, :is_valid, true)}
-  defp process_is_valid({:ok, %{is_valid: 0} = result}), do: {:ok, Map.put(result, :is_valid, false)}
-  defp process_is_valid({:ok, result}), do: {:ok, result}
-  defp process_is_valid({:error, error}), do: {:error, error}
-
-  defp return_content({:ok, decoded_content}, _content), do: {:ok, decoded_content}
-  defp return_content(_error, content) do
-    case String.valid?(content) do
-      true -> {:ok, content}
-      _ -> {:error, [{%{description: "not a valid utf8 string", params: [], rule: :invalid}, "$.content"}]}
-    end
-  end
-
-  defp render_response({:error, error}, _params, _conn) when is_list(error), do: {:error, error}
-  defp render_response({:error, error}, _params, _conn), do: Logger.error(error)
-  defp render_response({:ok, result}, params, conn) do
+  defp render_response(result, params, conn) do
     render(conn, "show.json", digital_signature_info: Map.merge(result, params))
   end
 end
