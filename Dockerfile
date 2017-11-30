@@ -51,7 +51,9 @@ ARG APP_VERSION
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install \
    openssl \
    libssl-dev \
-   locales
+   locales \
+   wget \
+   gnupg
 
 # Set UTF-8 locale
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
