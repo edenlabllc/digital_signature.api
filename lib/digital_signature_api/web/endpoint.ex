@@ -3,6 +3,7 @@ defmodule DigitalSignature.Web.Endpoint do
   Phoenix Endpoint for digital_signature application.
   """
   use Phoenix.Endpoint, otp_app: :digital_signature_api
+  alias Confex.Resolver
 
   plug Plug.RequestId
   plug EView.Plugs.Idempotency
@@ -27,8 +28,8 @@ defmodule DigitalSignature.Web.Endpoint do
   It receives the endpoint configuration from the config files
   and must return the updated configuration.
   """
-  def load_from_system_env(config) do
-    config = Confex.process_env(config)
+  def init(_key, config) do
+    config = Resolver.resolve!(config)
 
     unless config[:secret_key_base] do
       raise "Set SECRET_KEY environment variable!"
