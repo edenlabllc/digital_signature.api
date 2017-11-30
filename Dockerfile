@@ -3,7 +3,7 @@ FROM debian:9.2 as builder
 ARG APP_NAME
 ARG APP_VERSION
 
-RUN apt-get update && apt-get -y install \
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install \
     gcc \
     autoconf \
     ragel \
@@ -13,8 +13,12 @@ RUN apt-get update && apt-get -y install \
     gnupg \
     locales
 
-RUN locale-gen en_US.UTF-8
-ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
+# Set UTF-8 locale
+RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+    dpkg-reconfigure --frontend=noninteractive locales && \
+    update-locale LANG=en_US.UTF-8
+
+ENV LANG en_US.UTF-8
 
 # Install Elixir
 RUN wget https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb && \
