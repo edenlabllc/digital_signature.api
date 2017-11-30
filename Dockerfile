@@ -46,6 +46,16 @@ FROM debian:9.2
 ARG APP_NAME
 ARG APP_VERSION
 
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install \
+   locales
+
+# Set UTF-8 locale
+RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+    dpkg-reconfigure --frontend=noninteractive locales && \
+    update-locale LANG=en_US.UTF-8
+
+ENV LANG en_US.UTF-8
+
 WORKDIR /home/app
 
 COPY --from=builder /home/app/_build/prod/rel/${APP_NAME}/releases/${APP_VERSION}/${APP_NAME}.tar.gz /home/app
