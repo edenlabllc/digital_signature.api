@@ -70,7 +70,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
     assert "$.signed_content" == error["entry"]
     rule = Enum.at(error["rules"], 0)
     assert "invalid" == rule["rule"]
-    assert "not a base64 string" == rule["description"]
+    assert "Not a base64 string" == rule["description"]
   end
 
   test "processing valid data works", %{conn: conn} do
