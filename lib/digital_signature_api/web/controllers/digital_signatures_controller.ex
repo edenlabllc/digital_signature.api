@@ -2,54 +2,31 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
   @moduledoc false
   use DigitalSignature.Web, :controller
   use JValid
-  alias DigitalSignature.Cert.API, as: CertAPI
+  alias DigitalSignature.NifService
   require Logger
 
   action_fallback DigitalSignature.Web.FallbackController
 
   use_schema :digital_signatures, "specs/json_schemas/digital_signatures_request.json"
 
-  def index(conn, params) do
-    with :ok <- validate_schema(:digital_signatures, params) do
-      params
-      |> Map.get("signed_content")
-      |> Base.decode64()
-      |> process_signed_data(conn, params)
+  def index(conn, %{signed_content: signed_content} = params) do
+    with :ok <- validate_schema(:digital_signatures, params),
+         {:ok, signed_data} = Base.decode64(signed_content),
+         check = Map.get(params, "check")
+    do
+        signed_data
+        |> NifService.process_signed_data(check)
+        |> process_result()
+        |> render_response(params, conn)
+    else
+        {:error, reason} -> {:error, reason}
+        :error -> {:error, [{%{description: "Not a base64 string", params: [], rule: :invalid}, "$.signed_content"}]}
     end
-  end
-
-  defp get_check_value(params) do
-    case Map.get(params, "check") do
-      false -> 0
-      _ -> 1
-    end
-  end
-
-  defp process_signed_data(:error, _conn, _params) do
-    {:error, [{%{description: "not a base64 string", params: [], rule: :invalid}, "$.signed_content"}]}
-  end
-  defp process_signed_data({:ok, signed_content}, conn, params) do
-    signed_content
-    |> process_content(params)
-    |> process_result()
-    |> render_response(params, conn)
-  end
-
-  defp process_content(signed_content, params) do
-    list_content = :erlang.binary_to_list(signed_content)
-    certs_map = CertAPI.get_certs_map()
-    check_value = get_check_value(params)
-
-    result = DigitalSignatureLib.processPKCS7Data(list_content, certs_map, check_value)
-    :erlang.garbage_collect()
-
-    result
   end
 
   defp process_result({:error, error}), do: {:error, error}
-  defp process_result({:ok, result}) do
-    result
-    |> Map.get(:content)
+  defp process_result({:ok, %{content: content} = result}) do
+    content
     |> process_content()
     |> update_content(result)
     |> process_is_valid()
@@ -80,6 +57,6 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
   defp render_response({:error, error}, _params, _conn) when is_list(error), do: {:error, error}
   defp render_response({:error, error}, _params, _conn), do: Logger.error(error)
   defp render_response({:ok, result}, params, conn) do
-    render(conn, "digital_signature.json", digital_signature_info: Map.merge(result, params))
+    render(conn, "show.json", digital_signature_info: Map.merge(result, params))
   end
 end

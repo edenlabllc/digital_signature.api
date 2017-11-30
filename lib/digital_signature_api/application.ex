@@ -19,6 +19,7 @@ defmodule DigitalSignature do
       supervisor(DigitalSignature.Web.Endpoint, []),
       # Starts a worker by calling: DigitalSignature.Worker.start_link(arg1, arg2, arg3)
       # worker(DigitalSignature.Worker, [arg1, arg2, arg3]),
+      worker(DigitalSignature.NifService, [300])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
