@@ -3,6 +3,8 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
   alias DigitalSignature.Cert
   alias DigitalSignature.Repo
 
+  @insert_timeout 30_000
+
   setup %{conn: conn} do
     insert_dfs_certs()
     insert_justice_certs()
@@ -151,27 +153,25 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
           parent: nil,
           type: "root",
           active: true
-      })
+      }, timeout: @insert_timeout)
 
-    {:ok, _} =
-      Repo.insert(
-        %Cert{
-          name: "DFS",
-          data: File.read!("test/fixtures/CA-OCSP-DFS.cer"),
-          parent: dfs_root_id,
-          type: "ocsp",
-          active: true
-      })
+    Repo.insert!(
+      %Cert{
+        name: "DFS",
+        data: File.read!("test/fixtures/CA-OCSP-DFS.cer"),
+        parent: dfs_root_id,
+        type: "ocsp",
+        active: true
+    }, timeout: @insert_timeout)
 
-    {:ok, _} =
-      Repo.insert(
-        %Cert{
-          name: "DFS",
-          data: File.read!("test/fixtures/CA-TSP-DFS.cer"),
-          parent: nil,
-          type: "tsp",
-          active: true
-      })
+    Repo.insert!(
+      %Cert{
+        name: "DFS",
+        data: File.read!("test/fixtures/CA-TSP-DFS.cer"),
+        parent: nil,
+        type: "tsp",
+        active: true
+    }, timeout: @insert_timeout)
   end
 
   defp insert_justice_certs do
@@ -183,26 +183,24 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
           parent: nil,
           type: "root",
           active: true
-      })
+      }, timeout: @insert_timeout)
 
-    {:ok, _} =
-      Repo.insert(
-        %Cert{
-          name: "DFS",
-          data: File.read!("test/fixtures/OCSP-Server Justice.cer"),
-          parent: j_root_id,
-          type: "ocsp",
-          active: true
-      })
+    Repo.insert!(
+      %Cert{
+        name: "DFS",
+        data: File.read!("test/fixtures/OCSP-Server Justice.cer"),
+        parent: j_root_id,
+        type: "ocsp",
+        active: true
+    }, timeout: @insert_timeout)
 
-    {:ok, _} =
-      Repo.insert(
-        %Cert{
-          name: "DFS",
-          data: File.read!("test/fixtures/TSP-Server Justice.cer"),
-          parent: nil,
-          type: "tsp",
-          active: true
-      })
+    Repo.insert!(
+      %Cert{
+        name: "DFS",
+        data: File.read!("test/fixtures/TSP-Server Justice.cer"),
+        parent: nil,
+        type: "tsp",
+        active: true
+    }, timeout: @insert_timeout)
   end
 end
