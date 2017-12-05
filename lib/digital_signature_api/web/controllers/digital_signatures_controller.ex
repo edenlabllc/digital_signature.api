@@ -13,7 +13,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
     with :ok <- validate_schema(:digital_signatures, params),
          {:ok, signed_data} <- Base.decode64(Map.get(params, "signed_content")),
          {:ok, result} <- NifService.process_signed_data(signed_data, Map.get(params, "check")),
-         {:ok, content} <- Poison.decode(Map.get(result, :content))
+         {:ok, content} <- decode_content(result)
     do
         result
         |> Map.put(:content, content)
@@ -32,6 +32,9 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
           {:error, error}
     end
   end
+
+  defp decode_content(%{content: ""}), do: {:ok, ""}
+  defp decode_content(%{content: content}), do: Poison.decode(content)
 
   defp process_is_valid(%{is_valid: 1} = result), do: Map.put(result, :is_valid, true)
   defp process_is_valid(%{is_valid: 0} = result), do: Map.put(result, :is_valid, false)

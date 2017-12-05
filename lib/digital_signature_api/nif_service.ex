@@ -11,7 +11,14 @@ defmodule DigitalSignature.NifService do
 
   def handle_call({:process, signed_data, check}, _from, {certs, ttl}) do
     signed_data_list = :binary.bin_to_list(signed_data)
-    certs = if NaiveDateTime.compare(ttl, NaiveDateTime.utc_now()) != :gt, do: certs, else: CertAPI.get_certs_map()
+
+    {certs, ttl} =
+      if NaiveDateTime.compare(ttl, NaiveDateTime.utc_now()) != :gt do
+        {certs, ttl}
+      else
+        {CertAPI.get_certs_map(), NaiveDateTime.utc_now()}
+      end
+
     check =
       case check do
         false -> 0
@@ -20,7 +27,7 @@ defmodule DigitalSignature.NifService do
 
     result = DigitalSignatureLib.processPKCS7Data(signed_data_list, certs, check)
 
-    {:reply, result, :hibernate}
+    {:reply, result, {certs, ttl}, :hibernate}
   end
 
   # Client
