@@ -3,7 +3,7 @@ defmodule DigitalSignature.NifService do
   use GenServer
   alias DigitalSignature.Cert.API, as: CertAPI
 
-  @max_response_time 30_000
+  @max_response_time 60_000
 
   # Callbacks
   def init(ttl_seconds) do

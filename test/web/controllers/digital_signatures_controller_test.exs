@@ -3,9 +3,13 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
   alias DigitalSignature.Cert
   alias DigitalSignature.Repo
 
-  @insert_timeout 30_000
-
   setup %{conn: conn} do
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(DigitalSignature.Repo)
+    Ecto.Adapters.SQL.Sandbox.mode(DigitalSignature.Repo, {:shared, self()})
+
+    Supervisor.terminate_child(DigitalSignature.Supervisor, DigitalSignature.NifService)
+    Supervisor.restart_child(DigitalSignature.Supervisor, DigitalSignature.NifService)
+
     insert_dfs_certs()
     insert_justice_certs()
 
@@ -153,7 +157,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
           parent: nil,
           type: "root",
           active: true
-      }, timeout: @insert_timeout)
+      })
 
     Repo.insert!(
       %Cert{
@@ -162,7 +166,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
         parent: dfs_root_id,
         type: "ocsp",
         active: true
-    }, timeout: @insert_timeout)
+    })
 
     Repo.insert!(
       %Cert{
@@ -171,7 +175,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
         parent: nil,
         type: "tsp",
         active: true
-    }, timeout: @insert_timeout)
+    })
   end
 
   defp insert_justice_certs do
@@ -183,7 +187,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
           parent: nil,
           type: "root",
           active: true
-      }, timeout: @insert_timeout)
+      })
 
     Repo.insert!(
       %Cert{
@@ -192,7 +196,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
         parent: j_root_id,
         type: "ocsp",
         active: true
-    }, timeout: @insert_timeout)
+    })
 
     Repo.insert!(
       %Cert{
@@ -201,6 +205,6 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
         parent: nil,
         type: "tsp",
         active: true
-    }, timeout: @insert_timeout)
+    })
   end
 end
