@@ -4,14 +4,11 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
   alias DigitalSignature.Repo
 
   setup %{conn: conn} do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(DigitalSignature.Repo)
-    Ecto.Adapters.SQL.Sandbox.mode(DigitalSignature.Repo, {:shared, self()})
+    insert_dfs_certs()
+    insert_justice_certs()
 
     Supervisor.terminate_child(DigitalSignature.Supervisor, DigitalSignature.NifService)
     Supervisor.restart_child(DigitalSignature.Supervisor, DigitalSignature.NifService)
-
-    insert_dfs_certs()
-    insert_justice_certs()
 
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
