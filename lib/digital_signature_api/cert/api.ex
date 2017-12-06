@@ -12,6 +12,7 @@ defmodule DigitalSignature.Cert.API do
       on: c.parent == p.id and c.type == "ocsp" and c.active,
       select: {p.type, p.data, c.data}
 
+
     query
     |> Repo.all()
     |> generate_map()
