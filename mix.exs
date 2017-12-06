@@ -25,9 +25,8 @@ defmodule DigitalSignature.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     [extra_applications: [:logger, :confex, :runtime_tools, :poison,
-                          :cowboy, :httpoison, :ecto, :ecto_paging, :postgrex,
-                          :phoenix, :phoenix_pubsub,
-                          :eview, :runtime_tools],
+                          :cowboy, :httpoison, :ecto, :postgrex,
+                          :phoenix, :phoenix_pubsub, :eview, :runtime_tools],
      mod: {DigitalSignature, []}]
   end
 
@@ -53,7 +52,6 @@ defmodule DigitalSignature.Mixfile do
      {:confex, "~> 3.3"},
      {:poison, "~> 3.1"},
      {:ecto, "~> 2.2"},
-     {:ecto_paging, ">= 0.0.0"},
      {:cowboy, "~> 1.1"},
      {:httpoison, "~> 0.13.0"},
      {:postgrex, ">= 0.0.0"},
