@@ -5,14 +5,11 @@ ARG APP_VERSION
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install \
     gcc \
-    autoconf \
-    ragel \
     make \
     git \
     wget \
     gnupg \
-    locales \
-    openssl
+    locales
 
 # Set UTF-8 locale
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
@@ -47,26 +44,13 @@ FROM debian:latest
 ARG APP_NAME
 ARG APP_VERSION
 
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install \
-   openssl \
-   locales \
-   wget \
-   gnupg
-
 # Set UTF-8 locale
-RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install locales && \
+    sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     dpkg-reconfigure --frontend=noninteractive locales && \
     update-locale LANG=en_US.UTF-8
 
 ENV LANG en_US.UTF-8
-
-# Install Erlang & Elixir
-RUN wget https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb && \
-    DEBIAN_FRONTEND=noninteractive dpkg -i erlang-solutions_1.0_all.deb
-
-RUN apt-get update && apt-get -y install \
-    esl-erlang \
-    elixir
 
 WORKDIR /home/app
 
