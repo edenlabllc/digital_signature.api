@@ -48,7 +48,7 @@ defmodule DigitalSignature.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:distillery, "~> 1.5", runtime: false},
+    [{:distillery, "~> 1.4.0", runtime: false},
      {:confex, "~> 3.3"},
      {:poison, "~> 3.1"},
      {:ecto, "~> 2.2"},
