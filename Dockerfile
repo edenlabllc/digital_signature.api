@@ -1,4 +1,4 @@
-FROM debian:9.2 as builder
+FROM debian:latest as builder
 
 ARG APP_NAME
 ARG APP_VERSION
@@ -12,8 +12,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install \
     wget \
     gnupg \
     locales \
-    openssl \
-    libssl-dev
+    openssl
 
 # Set UTF-8 locale
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
@@ -43,14 +42,13 @@ RUN mix do \
       deps.compile, \
       release
 
-FROM debian:9.2
+FROM debian:latest
 
 ARG APP_NAME
 ARG APP_VERSION
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install \
    openssl \
-   libssl-dev \
    locales \
    wget \
    gnupg
@@ -72,7 +70,7 @@ RUN apt-get update && apt-get -y install \
 
 WORKDIR /home/app
 
-COPY --from=builder /home/app/_build/prod/rel/${APP_NAME}/releases/${APP_VERSION}/${APP_NAME}.tar.gz /home/app
+COPY --from=builder /home/app/_build/prod/rel/${APP_NAME}/releases/${APP_VERSION}/${APP_NAME}.tar.gz .
 
 RUN tar -xzf ${APP_NAME}.tar.gz; rm ${APP_NAME}.tar.gz
 
