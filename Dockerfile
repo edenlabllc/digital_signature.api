@@ -44,8 +44,10 @@ FROM debian:latest
 ARG APP_NAME
 ARG APP_VERSION
 
-# Set UTF-8 locale
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install locales && \
+# OpenSSL for crypto && UTF-8 locale
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install \
+    libssl1.0.2 \
+    locales && \
     sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     dpkg-reconfigure --frontend=noninteractive locales && \
     update-locale LANG=en_US.UTF-8
