@@ -22,4 +22,5 @@ config :digital_signature_api, DigitalSignature.Repo,
   password: "postgres",
   database: "digital_signature_api_test",
   hostname: "localhost",
-  pool: Ecto.Adapters.SQL.Sandbox
+  pool: Ecto.Adapters.SQL.Sandbox,
+  ownership_timeout: 120_000_000

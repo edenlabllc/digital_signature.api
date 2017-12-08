@@ -25,9 +25,8 @@ defmodule DigitalSignature.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     [extra_applications: [:logger, :confex, :runtime_tools, :poison,
-                          :cowboy, :httpoison, :ecto, :ecto_paging, :postgrex,
-                          :phoenix, :phoenix_pubsub,
-                          :eview, :runtime_tools],
+                          :cowboy, :httpoison, :ecto, :postgrex,
+                          :phoenix, :phoenix_pubsub, :eview, :runtime_tools],
      mod: {DigitalSignature, []}]
   end
 
@@ -49,11 +48,10 @@ defmodule DigitalSignature.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:distillery, "~> 1.4.0"},
+    [{:distillery, "~> 1.4.0", runtime: false},
      {:confex, "~> 3.3"},
      {:poison, "~> 3.1"},
      {:ecto, "~> 2.2"},
-     {:ecto_paging, ">= 0.0.0"},
      {:cowboy, "~> 1.1"},
      {:httpoison, "~> 0.13.0"},
      {:postgrex, ">= 0.0.0"},
@@ -63,7 +61,7 @@ defmodule DigitalSignature.Mixfile do
      {:ecto_logger_json, "~> 0.1"},
      {:excoveralls, ">= 0.5.0", only: [:dev, :test]},
      {:jvalid, "~> 0.6.0"},
-     {:digital_signature_lib, git: "https://github.com/edenlabllc/digital_signature.lib.git", branch: :fixes},
+     {:digital_signature_lib, git: "https://github.com/edenlabllc/digital_signature.lib.git", branch: "fixes"},
      {:dogma, ">= 0.1.15", only: [:dev, :test]},
      {:credo, ">= 0.8.10", only: [:dev, :test]}]
   end

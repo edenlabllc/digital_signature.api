@@ -1,19 +1,15 @@
-FROM debian:9.2 as builder
+FROM debian:latest as builder
 
 ARG APP_NAME
 ARG APP_VERSION
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install \
     gcc \
-    autoconf \
-    ragel \
     make \
     git \
     wget \
     gnupg \
-    locales \
-    openssl \
-    libssl-dev
+    locales
 
 # Set UTF-8 locale
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
@@ -43,36 +39,24 @@ RUN mix do \
       deps.compile, \
       release
 
-FROM debian:9.2
+FROM debian:latest
 
 ARG APP_NAME
 ARG APP_VERSION
 
+# OpenSSL for crypto && UTF-8 locale
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install \
-   openssl \
-   libssl-dev \
-   locales \
-   wget \
-   gnupg
-
-# Set UTF-8 locale
-RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+    libssl1.0.2 \
+    locales && \
+    sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     dpkg-reconfigure --frontend=noninteractive locales && \
     update-locale LANG=en_US.UTF-8
 
 ENV LANG en_US.UTF-8
 
-# Install Erlang & Elixir
-RUN wget https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb && \
-    DEBIAN_FRONTEND=noninteractive dpkg -i erlang-solutions_1.0_all.deb
-
-RUN apt-get update && apt-get -y install \
-    esl-erlang \
-    elixir
-
 WORKDIR /home/app
 
-COPY --from=builder /home/app/_build/prod/rel/${APP_NAME}/releases/${APP_VERSION}/${APP_NAME}.tar.gz /home/app
+COPY --from=builder /home/app/_build/prod/rel/${APP_NAME}/releases/${APP_VERSION}/${APP_NAME}.tar.gz .
 
 RUN tar -xzf ${APP_NAME}.tar.gz; rm ${APP_NAME}.tar.gz
 

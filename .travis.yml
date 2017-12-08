@@ -15,7 +15,7 @@ elixir:
 otp_release:
   - 20.1
 notifications:
-  slack: 
+  slack:
     rooms:
       - secure: "FT8IBl8IzXpiIb8zYcJUbPglkHQ4pQM/zRYVoWlybjmmUi45In52byvPgCdYKHee/ZaqnE230t0tbf06GZGyKZ+OGfTd1zn84yYL0vCocxofVDQSsfJmrLigX6loCZ54GB3CSvhfWRKUdFYRDhQ6vSLlZCuTx31bAINFAJG2Vb/bAbOLtjKf89TANfECTUZ3C+FOykBwbdo3y/5635ErDTb5CGVhRaNmWnwxInmrlaRsO/mpYC1MtbOjHfup292m2Blv67iv6vpGtpD80a/VuJws2Dtpg9quGJQrD0EC5v1Q1I1MKkPwuVLdH5anR+hVqaECaj0EtPgrA1nW1RxFt7joobYT4VjWYoMV1oXZ0Ze+zeUeIWJULVd/2E8a61zX7Ge/uZZBfjTIxILF8ZG0fsOGfnakbP7Q9fF53vjIJs0WqjyYRXehWdxdy2/G1woMu0BBB8AQsdPTNaoNblrv2zPqpSUmQROMDeHIDFSyt6mHhryRZfYcrwJPeNOzIyHhSTiMxO6KZxmKCfzzl11hWSLRn+PdAgTHMwOhWc9SyPkcIRlLZZ2BeFWtoLX/4JnlH5UGsogB8fR5vmz//nl7mWJkbIzXA8lpqHPzdUzytNw0qNiZ6729EJ7N8dB+hdvVJMwhPXelgRcqBf60v1Q9kR9/BUqlVCm8axcKNxgY8T4="
     on_success: always

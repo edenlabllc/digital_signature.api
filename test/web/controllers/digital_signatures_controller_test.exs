@@ -1,7 +1,15 @@
 defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
   use DigitalSignature.Web.ConnCase
+  alias DigitalSignature.Cert
+  alias DigitalSignature.Repo
 
   setup %{conn: conn} do
+    insert_dfs_certs()
+    insert_justice_certs()
+
+    Supervisor.terminate_child(DigitalSignature.Supervisor, DigitalSignature.NifService)
+    Supervisor.restart_child(DigitalSignature.Supervisor, DigitalSignature.NifService)
+
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
@@ -70,10 +78,10 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
     assert "$.signed_content" == error["entry"]
     rule = Enum.at(error["rules"], 0)
     assert "invalid" == rule["rule"]
-    assert "not a base64 string" == rule["description"]
+    assert "Not a base64 string" == rule["description"]
   end
 
-  test "processing valid data works", %{conn: conn} do
+  test "processing empty data works", %{conn: conn} do
     data = %{
       "signed_content" => "MTEx",
       "signed_content_encoding" => "base64"
@@ -101,5 +109,101 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
     assert "" == signer["state_or_province_name"]
     assert "" == signer["surname"]
     assert "" == signer["title"]
+  end
+
+  @tag :pending
+  test "processing valid encoded data works", %{conn: conn} do
+    data = get_data("test/fixtures/sign1.json")
+    request = create_request(data)
+
+    conn = post conn, digital_signatures_path(conn, :index), request
+    resp = json_response(conn, 200)
+
+    assert data == resp["data"]
+  end
+
+  @tag :pending
+  test "processing valid encoded data works again", %{conn: conn} do
+    data = get_data("test/fixtures/sign2.json")
+    request = create_request(data)
+
+    conn = post conn, digital_signatures_path(conn, :index), request
+    resp = json_response(conn, 200)
+
+    assert data == resp["data"]
+  end
+
+  defp get_data(json_file) do
+    {:ok, file} = File.read(json_file)
+    {:ok, json} = Poison.decode(file)
+
+    json["data"]
+  end
+
+  defp create_request(data) do
+    %{
+      "signed_content" => data["signed_content"],
+      "signed_content_encoding" => data["signed_content_encoding"]
+    }
+  end
+
+  defp insert_dfs_certs do
+    {:ok, %{id: dfs_root_id}} =
+      Repo.insert(
+        %Cert{
+          name: "DFS",
+          data: File.read!("test/fixtures/CA-DFS.cer"),
+          parent: nil,
+          type: "root",
+          active: true
+      })
+
+    Repo.insert!(
+      %Cert{
+        name: "DFS",
+        data: File.read!("test/fixtures/CA-OCSP-DFS.cer"),
+        parent: dfs_root_id,
+        type: "ocsp",
+        active: true
+    })
+
+    Repo.insert!(
+      %Cert{
+        name: "DFS",
+        data: File.read!("test/fixtures/CA-TSP-DFS.cer"),
+        parent: nil,
+        type: "tsp",
+        active: true
+    })
+  end
+
+  defp insert_justice_certs do
+    {:ok, %{id: j_root_id}} =
+      Repo.insert(
+        %Cert{
+          name: "Justice",
+          data: File.read!("test/fixtures/CA-Justice.cer"),
+          parent: nil,
+          type: "root",
+          active: true
+      })
+
+    Repo.insert!(
+      %Cert{
+        name: "DFS",
+        data: File.read!("test/fixtures/OCSP-Server Justice.cer"),
+        parent: j_root_id,
+        type: "ocsp",
+        active: true
+    })
+
+    Repo.insert!(
+      %Cert{
+        name: "DFS",
+        data: File.read!("test/fixtures/TSP-Server Justice.cer"),
+        parent: nil,
+        type: "tsp",
+        active: true
+    })
   end
 end

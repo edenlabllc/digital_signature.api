@@ -15,6 +15,7 @@ end
 release :digital_signature_api do
   set version: current_version(:digital_signature_api)
   set applications: [
-    digital_signature_api: :permanent
+    :runtime_tools,
+    :digital_signature_api,
   ]
 end

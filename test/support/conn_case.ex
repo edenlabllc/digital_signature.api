@@ -28,6 +28,12 @@ defmodule DigitalSignature.Web.ConnCase do
   setup tags do
     _ = tags
 
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(DigitalSignature.Repo)
+
+    unless tags[:async] do
+      Ecto.Adapters.SQL.Sandbox.mode(DigitalSignature.Repo, {:shared, self()})
+    end
+
     conn =
       Phoenix.ConnTest.build_conn()
       |> Plug.Conn.put_req_header("content-type", "application/json")
