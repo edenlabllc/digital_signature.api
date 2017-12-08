@@ -34,9 +34,11 @@ WORKDIR /home/digital_signature.api
 
 ENV MIX_ENV=test
 
-RUN service postgresql start && mix do \
+CMD service postgresql start && mix do \
       local.hex --force, \
       local.rebar --force, \
       deps.get, \
       deps.compile, \
-      test --trace
+      test --trace \
+      && bash
+

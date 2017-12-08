@@ -46,6 +46,9 @@ ARG APP_VERSION
 
 # OpenSSL for crypto && UTF-8 locale
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install \
+    libc6 \
+    libstdc++6 \
+    libgcc1 \
     libssl1.0.2 \
     locales && \
     sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
