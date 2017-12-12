@@ -1,4 +1,4 @@
-FROM debian:latest
+FROM debian:stretch
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install \
     gcc \
@@ -39,6 +39,4 @@ CMD service postgresql start && mix do \
       local.rebar --force, \
       deps.get, \
       deps.compile, \
-      test --trace \
-      && bash
-
+      test --trace

@@ -28,7 +28,7 @@ defmodule DigitalSignature.NifService do
 
     result = DigitalSignatureLib.processPKCS7Data(signed_data_list, certs, check)
 
-    {:reply, result, {certs, certs_time, ttl_seconds}}
+    {:reply, result, {certs, certs_time, ttl_seconds}, :hibernate}
   end
 
   # Client
