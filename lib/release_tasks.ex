@@ -48,14 +48,11 @@ defmodule DigitalSignature.ReleaseTasks do
     :init.stop()
   end
 
-  def priv_dir(app),
-    do: :code.priv_dir(app)
-
   defp run_migrations_for(app) do
     IO.puts "Running migrations for #{app}"
     Enum.each(@repos, &Migrator.run(&1, migrations_path(app), :up, all: true))
   end
 
-  defp migrations_path(app), do: Path.join([priv_dir(app), "repo", "migrations"])
-  defp seed_path(app), do: Path.join([priv_dir(app), "repo", "seeds.exs"])
+  defp migrations_path(app), do: Application.app_dir(app, "priv/repo/migrations")
+  defp seed_path(app), do: Application.app_dir(app, "priv/repo/seeds.exs")
 end
