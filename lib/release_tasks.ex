@@ -1,4 +1,4 @@
-defmodule DigitalSignature.ReleaseTasks do
+defmodule Elixir.DigitalSignature.ReleaseTasks do
   @moduledoc """
   Nice way to apply migrations inside a released application.
   Example:
@@ -7,7 +7,6 @@ defmodule DigitalSignature.ReleaseTasks do
   alias Ecto.Migrator
 
   @start_apps [
-    :logger,
     :postgrex,
     :ecto,
     :crypto,
@@ -22,7 +21,7 @@ defmodule DigitalSignature.ReleaseTasks do
     DigitalSignature.Repo
   ]
 
-  def migrate! do
+  def migrate do
     IO.puts "Loading digital_signature_api.."
     # Load the code for digital_signature_api, but don't start it
     :ok = Application.load(:digital_signature_api)
