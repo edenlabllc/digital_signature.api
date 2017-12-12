@@ -1,4 +1,4 @@
-FROM debian:stetch as builder
+FROM debian:stretch as builder
 
 ARG APP_NAME
 ARG APP_VERSION
