@@ -8,9 +8,7 @@ defmodule Elixir.DigitalSignature.ReleaseTasks do
 
   @start_apps [
     :postgrex,
-    :ecto,
-    :crypto,
-    :ssl
+    :ecto
   ]
 
   @apps [
