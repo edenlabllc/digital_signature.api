@@ -1,4 +1,4 @@
-defmodule Elixir.DigitalSignature.ReleaseTasks do
+defmodule DigitalSignature.ReleaseTasks do
   @moduledoc """
   Nice way to apply migrations inside a released application.
   Example:
