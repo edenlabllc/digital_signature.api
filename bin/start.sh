@@ -34,11 +34,13 @@ docker run -p 4000:4000 \
        --name ${PROJECT_NAME} \
        "${PROJECT_NAME}:${PROJECT_VERSION}"
 sleep 5
-docker ps
-RUNNING_CONTAINERS=$(docker ps | wc -l | tr -d '[:space:]');
 
-if [ $RUNNING_CONTAINERS == "1" ]; then
+# Check if a local Docker container with created image started succesfully.
+docker logs ${PROJECT_NAME} --details --since 5h;
+
+IS_RUNNING=$(sudo docker inspect --format='{{ .State.Running }}' ${PROJECT_NAME});
+
+if [ $IS_RUNNING == "false" ]; then
   echo "[E] Container is not started.";
-  docker logs ${PROJECT_NAME} --details --since 5h;
   exit 1;
 fi;
