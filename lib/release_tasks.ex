@@ -7,6 +7,7 @@ defmodule DigitalSignature.ReleaseTasks do
   alias Ecto.Migrator
 
   @start_apps [
+    :logger,
     :postgrex,
     :ecto
   ]
