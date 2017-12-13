@@ -1,7 +1,7 @@
 defmodule DigitalSignature.Mixfile do
   use Mix.Project
 
-  @version "1.34.0"
+  @version "1.35.0"
 
   def project do
     [app: :digital_signature_api,
