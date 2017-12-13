@@ -111,7 +111,6 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
     assert "" == signer["title"]
   end
 
-  @tag :pending
   test "processing valid encoded data works", %{conn: conn} do
     data = get_data("test/fixtures/sign1.json")
     request = create_request(data)
@@ -122,7 +121,6 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
     assert data == resp["data"]
   end
 
-  @tag :pending
   test "processing valid encoded data works again", %{conn: conn} do
     data = get_data("test/fixtures/sign2.json")
     request = create_request(data)
