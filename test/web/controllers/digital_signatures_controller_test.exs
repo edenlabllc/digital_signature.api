@@ -107,7 +107,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
 
     resp = json_response(conn, 200)
 
-    assert(resp["data"]["is_valid"] == true)
+    assert resp["data"]["is_valid"]
   end
 
   defp get_data(json_file) do
