@@ -17,15 +17,12 @@ defmodule DigitalSignature.Cert.API do
     |> Enum.reduce(%{general: [], tsp: []}, &process_cert(&1, &2))
   end
 
-  defp process_cert({"root", rootCert, ocspCert}, %{general: general} = map) do
-    new_root = %{root: prepare_cert_data(rootCert), ocsp: prepare_cert_data(ocspCert)}
+  defp process_cert({"root", root_cert, ocsp_ert}, %{general: general} = map) do
+    new_root = %{root: root_cert, ocsp: ocsp_ert}
 
     Map.put(map, :general, [new_root | general])
   end
-  defp process_cert({"tsp", tspCert, _}, %{tsp: tsp} = map) do
-    Map.put(map, :tsp, [prepare_cert_data(tspCert) | tsp])
+  defp process_cert({"tsp", tsp_cert, _}, %{tsp: tsp} = map) do
+    Map.put(map, :tsp, [tsp_cert | tsp])
   end
-
-  defp prepare_cert_data(nil), do: nil
-  defp prepare_cert_data(data), do: :erlang.binary_to_list(data)
 end

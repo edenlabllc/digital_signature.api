@@ -81,37 +81,6 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
     assert "Not a base64 string" == rule["description"]
   end
 
-  test "processing empty data works", %{conn: conn} do
-    data = %{
-      "signed_content" => "MTEx",
-      "signed_content_encoding" => "base64"
-    }
-
-    conn = post conn, digital_signatures_path(conn, :index), data
-
-    resp = json_response(conn, 200)
-    assert Map.has_key?(resp, "data")
-    assert data["signed_content"] == resp["data"]["signed_content"]
-    assert data["signed_content_encoding"] == resp["data"]["signed_content_encoding"]
-    assert "" == resp["data"]["content"]
-    refute resp["data"]["is_valid"]
-
-    assert Map.has_key?(resp["data"], "signer")
-    signer = resp["data"]["signer"]
-    assert "" == signer["common_name"]
-    assert "" == signer["country_name"]
-    assert "" == signer["drfo"]
-    assert "" == signer["edrpou"]
-    assert "" == signer["given_name"]
-    assert "" == signer["locality_name"]
-    assert "" == signer["organization_name"]
-    assert "" == signer["organizational_unit_name"]
-    assert "" == signer["state_or_province_name"]
-    assert "" == signer["surname"]
-    assert "" == signer["title"]
-  end
-
-  @tag :pending
   test "processing valid encoded data works", %{conn: conn} do
     data = get_data("test/fixtures/sign1.json")
     request = create_request(data)
@@ -122,7 +91,6 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
     assert data == resp["data"]
   end
 
-  @tag :pending
   test "processing valid encoded data works again", %{conn: conn} do
     data = get_data("test/fixtures/sign2.json")
     request = create_request(data)
@@ -131,6 +99,15 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
     resp = json_response(conn, 200)
 
     assert data == resp["data"]
+  end
+
+  test "processign valid signed declaration", %{conn: conn} do
+    data = get_data("test/fixtures/signed_declaration_request.json")
+    conn = post conn, digital_signatures_path(conn, :index), data
+
+    resp = json_response(conn, 200)
+
+    assert resp["data"]["is_valid"]
   end
 
   defp get_data(json_file) do
