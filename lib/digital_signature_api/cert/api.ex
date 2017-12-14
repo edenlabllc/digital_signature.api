@@ -18,14 +18,11 @@ defmodule DigitalSignature.Cert.API do
   end
 
   defp process_cert({"root", rootCert, ocspCert}, %{general: general} = map) do
-    new_root = %{root: prepare_cert_data(rootCert), ocsp: prepare_cert_data(ocspCert)}
+    new_root = %{root: rootCert, ocsp: ocspCert}
 
     Map.put(map, :general, [new_root | general])
   end
   defp process_cert({"tsp", tspCert, _}, %{tsp: tsp} = map) do
-    Map.put(map, :tsp, [prepare_cert_data(tspCert) | tsp])
+    Map.put(map, :tsp, [tspCert | tsp])
   end
-
-  defp prepare_cert_data(nil), do: nil
-  defp prepare_cert_data(data), do: :erlang.binary_to_list(data)
 end
