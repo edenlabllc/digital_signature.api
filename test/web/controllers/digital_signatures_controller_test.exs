@@ -110,6 +110,15 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
     assert resp["data"]["is_valid"]
   end
 
+  test "processign another valid signed declaration", %{conn: conn} do
+    data = get_data("test/fixtures/signed_declaration_request2.json")
+    conn = post conn, digital_signatures_path(conn, :index), data
+
+    resp = json_response(conn, 200)
+
+    assert resp["data"]["is_valid"]
+  end
+
   defp get_data(json_file) do
     {:ok, file} = File.read(json_file)
     {:ok, json} = Poison.decode(file)
