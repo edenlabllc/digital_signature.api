@@ -18,7 +18,7 @@ defmodule DigitalSignature.NifService do
         {CertAPI.get_certs_map(), NaiveDateTime.add(certs_time, ttl_seconds)}
       end
 
-    check = if check !== false, do: true
+    check = unless is_boolean(check), do: true
 
     result = DigitalSignatureLib.processPKCS7Data(signed_data, certs, check)
 

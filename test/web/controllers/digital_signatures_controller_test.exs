@@ -113,7 +113,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
 
       data = resp["data"]
 
-      assert data["is_valid"] == false
+      refute data["is_valid"]
       assert data["validation_error_message"] == "error processing signed data"
     end
 
