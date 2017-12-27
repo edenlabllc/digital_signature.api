@@ -3,127 +3,173 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
   alias DigitalSignature.Cert
   alias DigitalSignature.Repo
 
-  setup %{conn: conn} do
-    insert_dfs_certs()
-    insert_justice_certs()
+  describe "With correct certs in db" do
+    setup %{conn: conn} do
+      insert_dfs_certs()
+      insert_justice_certs()
 
-    Supervisor.terminate_child(DigitalSignature.Supervisor, DigitalSignature.NifService)
-    Supervisor.restart_child(DigitalSignature.Supervisor, DigitalSignature.NifService)
+      Supervisor.terminate_child(DigitalSignature.Supervisor, DigitalSignature.NifService)
+      Supervisor.restart_child(DigitalSignature.Supervisor, DigitalSignature.NifService)
 
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+      {:ok, conn: put_req_header(conn, "accept", "application/json")}
+    end
+
+    test "required params validation works", %{conn: conn} do
+      conn = post conn, digital_signatures_path(conn, :index), %{}
+
+      resp = json_response(conn, 422)
+      assert Map.has_key?(resp, "error")
+      assert Map.has_key?(resp["error"], "type")
+      assert "validation_failed" == resp["error"]["type"]
+
+      assert Map.has_key?(resp["error"], "invalid")
+      assert 2 == length(resp["error"]["invalid"])
+
+      first_error = Enum.at(resp["error"]["invalid"], 0)
+      assert 1 == length(first_error["rules"])
+      rule = Enum.at(first_error["rules"], 0)
+      assert "required" == rule["rule"]
+      assert "required property signed_content was not present" == rule["description"]
+
+      second_error = Enum.at(resp["error"]["invalid"], 1)
+      assert 1 == length(second_error["rules"])
+      rule = Enum.at(second_error["rules"], 0)
+      assert "required" == rule["rule"]
+      assert "required property signed_content_encoding was not present" == rule["description"]
+    end
+
+    test "signed_content_encoding validation works", %{conn: conn} do
+      conn = post conn, digital_signatures_path(conn, :index), %{
+        "signed_content" => "",
+        "signed_content_encoding" => "base58"
+      }
+
+      resp = json_response(conn, 422)
+      assert Map.has_key?(resp, "error")
+      assert Map.has_key?(resp["error"], "type")
+      assert "validation_failed" == resp["error"]["type"]
+
+      assert Map.has_key?(resp["error"], "invalid")
+      assert 1 == length(resp["error"]["invalid"])
+
+      error = Enum.at(resp["error"]["invalid"], 0)
+      assert 1 == length(error["rules"])
+      assert "$.signed_content_encoding" == error["entry"]
+      rule = Enum.at(error["rules"], 0)
+      assert "inclusion" == rule["rule"]
+      assert "value is not allowed in enum" == rule["description"]
+    end
+
+    test "signed_content validation works", %{conn: conn} do
+      conn = post conn, digital_signatures_path(conn, :index), %{
+        "signed_content" => "111",
+        "signed_content_encoding" => "base64"
+      }
+
+      resp = json_response(conn, 422)
+      assert Map.has_key?(resp, "error")
+      assert Map.has_key?(resp["error"], "type")
+      assert "validation_failed" == resp["error"]["type"]
+
+      assert Map.has_key?(resp["error"], "invalid")
+      assert 1 == length(resp["error"]["invalid"])
+
+      error = Enum.at(resp["error"]["invalid"], 0)
+      assert 1 == length(error["rules"])
+      assert "$.signed_content" == error["entry"]
+      rule = Enum.at(error["rules"], 0)
+      assert "invalid" == rule["rule"]
+      assert "Not a base64 string" == rule["description"]
+    end
+
+    test "processing valid encoded data works", %{conn: conn} do
+      data = get_data("test/fixtures/sign1.json")
+      request = create_request(data)
+
+      conn = post conn, digital_signatures_path(conn, :index), request
+      resp = json_response(conn, 200)
+
+      assert mock_correct_response_data("test/fixtures/sign1.json") == resp["data"]
+    end
+
+    test "processing valid encoded data works again", %{conn: conn} do
+      data = get_data("test/fixtures/sign2.json")
+      request = create_request(data)
+
+      conn = post conn, digital_signatures_path(conn, :index), request
+      resp = json_response(conn, 200)
+
+      assert mock_correct_response_data("test/fixtures/sign2.json") == resp["data"]
+    end
+
+    test "processing invalid encoded data works", %{conn: conn} do
+      bad_request = %{
+        "signed_content" => "eyJoZWxsbzoid29ybGQ6fQ==",
+        "signed_content_encoding" => "base64"
+      }
+
+      conn = post conn, digital_signatures_path(conn, :index), bad_request
+      resp = json_response(conn, 200)
+
+      data = resp["data"]
+
+      assert data["is_valid"] == false
+      assert data["validation_error_message"] == "error processing signed data"
+    end
+
+    test "processign valid signed declaration", %{conn: conn} do
+      data = get_data("test/fixtures/signed_declaration_request.json")
+      conn = post conn, digital_signatures_path(conn, :index), data
+
+      resp = json_response(conn, 200)
+
+      assert resp["data"]["is_valid"]
+    end
+
+    test "processign another valid signed declaration", %{conn: conn} do
+      data = get_data("test/fixtures/signed_declaration_request2.json")
+      conn = post conn, digital_signatures_path(conn, :index), data
+
+      resp = json_response(conn, 200)
+
+      assert resp["data"]["is_valid"]
+    end
   end
 
-  test "required params validation works", %{conn: conn} do
-    conn = post conn, digital_signatures_path(conn, :index), %{}
+  describe "Without certs" do
+    setup %{conn: conn} do
+      Repo.delete_all(Cert)
 
-    resp = json_response(conn, 422)
-    assert Map.has_key?(resp, "error")
-    assert Map.has_key?(resp["error"], "type")
-    assert "validation_failed" == resp["error"]["type"]
+      Supervisor.terminate_child(DigitalSignature.Supervisor, DigitalSignature.NifService)
+      Supervisor.restart_child(DigitalSignature.Supervisor, DigitalSignature.NifService)
 
-    assert Map.has_key?(resp["error"], "invalid")
-    assert 2 == length(resp["error"]["invalid"])
+      {:ok, conn: put_req_header(conn, "accept", "application/json")}
+    end
 
-    first_error = Enum.at(resp["error"]["invalid"], 0)
-    assert 1 == length(first_error["rules"])
-    rule = Enum.at(first_error["rules"], 0)
-    assert "required" == rule["rule"]
-    assert "required property signed_content was not present" == rule["description"]
+    test "Can return correct error", %{conn: conn} do
+      data = get_data("test/fixtures/sign1.json")
+      conn = post conn, digital_signatures_path(conn, :index), data
 
-    second_error = Enum.at(resp["error"]["invalid"], 1)
-    assert 1 == length(second_error["rules"])
-    rule = Enum.at(second_error["rules"], 0)
-    assert "required" == rule["rule"]
-    assert "required property signed_content_encoding was not present" == rule["description"]
-  end
+      resp = json_response(conn, 200)
+      data = resp["data"]
 
-  test "signed_content_encoding validation works", %{conn: conn} do
-    conn = post conn, digital_signatures_path(conn, :index), %{
-      "signed_content" => "",
-      "signed_content_encoding" => "base58"
-    }
-
-    resp = json_response(conn, 422)
-    assert Map.has_key?(resp, "error")
-    assert Map.has_key?(resp["error"], "type")
-    assert "validation_failed" == resp["error"]["type"]
-
-    assert Map.has_key?(resp["error"], "invalid")
-    assert 1 == length(resp["error"]["invalid"])
-
-    error = Enum.at(resp["error"]["invalid"], 0)
-    assert 1 == length(error["rules"])
-    assert "$.signed_content_encoding" == error["entry"]
-    rule = Enum.at(error["rules"], 0)
-    assert "inclusion" == rule["rule"]
-    assert "value is not allowed in enum" == rule["description"]
-  end
-
-  test "signed_content validation works", %{conn: conn} do
-    conn = post conn, digital_signatures_path(conn, :index), %{
-      "signed_content" => "111",
-      "signed_content_encoding" => "base64"
-    }
-
-    resp = json_response(conn, 422)
-    assert Map.has_key?(resp, "error")
-    assert Map.has_key?(resp["error"], "type")
-    assert "validation_failed" == resp["error"]["type"]
-
-    assert Map.has_key?(resp["error"], "invalid")
-    assert 1 == length(resp["error"]["invalid"])
-
-    error = Enum.at(resp["error"]["invalid"], 0)
-    assert 1 == length(error["rules"])
-    assert "$.signed_content" == error["entry"]
-    rule = Enum.at(error["rules"], 0)
-    assert "invalid" == rule["rule"]
-    assert "Not a base64 string" == rule["description"]
-  end
-
-  test "processing valid encoded data works", %{conn: conn} do
-    data = get_data("test/fixtures/sign1.json")
-    request = create_request(data)
-
-    conn = post conn, digital_signatures_path(conn, :index), request
-    resp = json_response(conn, 200)
-
-    assert data == resp["data"]
-  end
-
-  test "processing valid encoded data works again", %{conn: conn} do
-    data = get_data("test/fixtures/sign2.json")
-    request = create_request(data)
-
-    conn = post conn, digital_signatures_path(conn, :index), request
-    resp = json_response(conn, 200)
-
-    assert data == resp["data"]
-  end
-
-  test "processign valid signed declaration", %{conn: conn} do
-    data = get_data("test/fixtures/signed_declaration_request.json")
-    conn = post conn, digital_signatures_path(conn, :index), data
-
-    resp = json_response(conn, 200)
-
-    assert resp["data"]["is_valid"]
-  end
-
-  test "processign another valid signed declaration", %{conn: conn} do
-    data = get_data("test/fixtures/signed_declaration_request2.json")
-    conn = post conn, digital_signatures_path(conn, :index), data
-
-    resp = json_response(conn, 200)
-
-    assert resp["data"]["is_valid"]
+      refute data["is_valid"]
+      assert data["validation_error_message"] == "matching ROOT certificate not found"
+    end
   end
 
   defp get_data(json_file) do
     {:ok, file} = File.read(json_file)
     {:ok, json} = Poison.decode(file)
 
-    json["data"]
+    Map.take(json["data"], ["signed_content", "signed_content_encoding"])
+  end
+
+  defp mock_correct_response_data(json_file) do
+    {:ok, file} = File.read(json_file)
+    {:ok, json} = Poison.decode(file)
+
+    Map.put(json["data"], "validation_error_message", "")
   end
 
   defp create_request(data) do

@@ -17,7 +17,6 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
     do
         result
         |> Map.put(:content, content)
-        |> process_is_valid()
         |> render_response(params, conn)
     else
         {:error, errors} when is_list(errors) ->
@@ -35,10 +34,6 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
 
   defp decode_content(%{content: ""}), do: {:ok, ""}
   defp decode_content(%{content: content}), do: Poison.decode(content)
-
-  defp process_is_valid(%{is_valid: 1} = result), do: Map.put(result, :is_valid, true)
-  defp process_is_valid(%{is_valid: 0} = result), do: Map.put(result, :is_valid, false)
-  defp process_is_valid(result), do: result
 
   defp render_response(result, params, conn) do
     render(conn, "show.json", digital_signature_info: Map.merge(result, params))
