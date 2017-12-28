@@ -8,6 +8,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       insert_dfs_certs()
       insert_justice_certs()
       insert_ucsku_certs()
+      insert_privat_certs
 
       Supervisor.terminate_child(DigitalSignature.Supervisor, DigitalSignature.NifService)
       Supervisor.restart_child(DigitalSignature.Supervisor, DigitalSignature.NifService)
@@ -264,6 +265,36 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       %Cert{
         name: "ucsku",
         data: File.read!("test/fixtures/cert14491837-tsp.crt"),
+        parent: nil,
+        type: "tsp",
+        active: true
+    })
+  end
+
+  defp insert_privat_certs do
+    {:ok, %{id: ucsk_root_id}} =
+      Repo.insert(
+        %Cert{
+          name: "Privat",
+          data: File.read!("test/fixtures/CA-3004751DEF2C78AE010000000100000049000000.cer"),
+          parent: nil,
+          type: "root",
+          active: true
+      })
+
+    Repo.insert!(
+      %Cert{
+        name: "Privat",
+        data: File.read!("test/fixtures/CAOCSPServer-D84EDA1BB9381E802000000010000001A000000.cer"),
+        parent: ucsk_root_id,
+        type: "ocsp",
+        active: true
+    })
+
+    Repo.insert!(
+      %Cert{
+        name: "Privat",
+        data: File.read!("test/fixtures/CATSPServer-3004751DEF2C78AE02000000010000004A000000.cer"),
         parent: nil,
         type: "tsp",
         active: true
