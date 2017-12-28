@@ -28,6 +28,12 @@ defmodule DigitalSignature.Web.FallbackController do
     |> render(EView.Views.Error, :"404")
   end
 
+  def call(conn, {:error,{:invalid_content, error_message, content}}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> render(DigitalSignature.Web.InvalidContentView, "invalid.json", error_message: error_message, content: content)
+  end
+
   def call(conn, {:error, validation_errors}) do
     conn
     |> put_status(:unprocessable_entity)

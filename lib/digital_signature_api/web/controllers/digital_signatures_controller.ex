@@ -9,6 +9,8 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
 
   use_schema :digital_signatures, "specs/json_schemas/digital_signatures_request.json"
 
+  @invalid_content_error_message "Malformed encoded content. Probably, you have encoded corrupted JSON."
+
   def index(conn, params) do
     with :ok <- validate_schema(:digital_signatures, params),
          {:ok, signed_data} <- Base.decode64(Map.get(params, "signed_content")),
@@ -33,7 +35,19 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
   end
 
   defp decode_content(%{content: ""}), do: {:ok, ""}
-  defp decode_content(%{content: content}), do: Poison.decode(content)
+  defp decode_content(%{content: content}) do
+    case Poison.decode(content) do
+      {:ok, decoded_content} ->
+        {:ok, decoded_content}
+
+      {:error, :invalid} ->
+        {:error, {:invalid_content, @invalid_content_error_message, content}}
+
+      {:error, reason} ->
+        message = "Malformed encoded content. #{inspect reason}"
+        {:error, {:invalid_content, @invalid_content_error_message <> " Error: #{inspect reason}", content}}
+      end
+  end
 
   defp render_response(result, params, conn) do
     render(conn, "show.json", digital_signature_info: Map.merge(result, params))
