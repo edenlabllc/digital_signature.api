@@ -44,7 +44,6 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
         {:error, {:invalid_content, @invalid_content_error_message, content}}
 
       {:error, reason} ->
-        message = "Malformed encoded content. #{inspect reason}"
         {:error, {:invalid_content, @invalid_content_error_message <> " Error: #{inspect reason}", content}}
       end
   end
