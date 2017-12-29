@@ -45,6 +45,9 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
 
       {:error, reason} ->
         {:error, {:invalid_content, @invalid_content_error_message <> " Error: #{inspect reason}", content}}
+
+      {:error, reason, ch} ->
+        {:error, {:invalid_content, @invalid_content_error_message <> " Error: #{inspect reason}, #{ch}", inspect content}}
       end
   end
 
