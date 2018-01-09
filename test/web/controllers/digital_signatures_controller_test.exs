@@ -8,7 +8,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       insert_dfs_certs()
       insert_justice_certs()
       insert_ucsku_certs()
-      insert_privat_certs
+      insert_privat_certs()
 
       Supervisor.terminate_child(DigitalSignature.Supervisor, DigitalSignature.NifService)
       Supervisor.restart_child(DigitalSignature.Supervisor, DigitalSignature.NifService)
@@ -157,6 +157,13 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
 
       refute data["is_valid"]
       assert data["validation_error_message"] == "matching ROOT certificate not found"
+    end
+
+    test "Can process data signed with key where some info fieds are invalid" , %{conn: conn} do
+      data = get_data("test/fixtures/invalid_sign_data.json")
+      conn = post conn, digital_signatures_path(conn, :index), data
+
+      resp = json_response(conn, 200)
     end
   end
 
