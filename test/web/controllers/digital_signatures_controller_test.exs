@@ -1,4 +1,6 @@
 defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
+  @moduledoc false
+
   use DigitalSignature.Web.ConnCase
   alias DigitalSignature.Cert
   alias DigitalSignature.Repo
@@ -121,22 +123,14 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       assert data["validation_error_message"] == "error processing signed data"
     end
 
-    test "processign valid signed declaration", %{conn: conn} do
-      data = get_data("test/fixtures/signed_declaration_request.json")
+    test "processign valid signed declaration with outdated signature", %{conn: conn} do
+      data = get_data("test/fixtures/outdated_cert.json")
       conn = post(conn, digital_signatures_path(conn, :index), data)
 
       resp = json_response(conn, 200)
 
-      assert resp["data"]["is_valid"]
-    end
-
-    test "processign another valid signed declaration", %{conn: conn} do
-      data = get_data("test/fixtures/signed_declaration_request2.json")
-      conn = post(conn, digital_signatures_path(conn, :index), data)
-
-      resp = json_response(conn, 200)
-
-      assert resp["data"]["is_valid"]
+      refute resp["data"]["is_valid"]
+      assert resp["data"]["validation_error_message"] == "certificate timestamp expired"
     end
   end
 
@@ -161,24 +155,34 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       assert data["validation_error_message"] == "matching ROOT certificate not found"
     end
 
-    test "Can process data signed with key where some info fieds are invalid", %{conn: conn} do
-      data = get_data("test/fixtures/invalid_sign_data.json")
+    test "Can process data signed with key where some info fieds are invalid and certificate is absent", %{conn: conn} do
+      data = get_data("test/fixtures/no_cert_and_invalid_signer.json")
       conn = post(conn, digital_signatures_path(conn, :index), data)
 
       resp = json_response(conn, 200)
+
+      data = resp["data"]
+
+      refute data["is_valid"]
+      assert data["validation_error_message"] == "matching ROOT certificate not found"
+
+      # this field contains invalid (non UTF-8) data inside the signed package - so we are returing an empty string
+      assert data["signer"]["organization_name"] == ""
+      # this field contains invalid (non UTF-8) data inside the signed package - so we are returing an empty string
+      assert data["signer"]["organizational_unit_name"] == ""
     end
   end
 
   defp get_data(json_file) do
     {:ok, file} = File.read(json_file)
-    {:ok, json} = Poison.decode(file)
+    {:ok, json} = Jason.decode(file)
 
     Map.take(json["data"], ["signed_content", "signed_content_encoding"])
   end
 
   defp mock_correct_response_data(json_file) do
     {:ok, file} = File.read(json_file)
-    {:ok, json} = Poison.decode(file)
+    {:ok, json} = Jason.decode(file)
 
     Map.put(json["data"], "validation_error_message", "")
   end

@@ -38,19 +38,12 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
   defp decode_content(%{content: ""}), do: {:ok, ""}
 
   defp decode_content(%{content: content}) do
-    case Poison.decode(content) do
+    case Jason.decode(content) do
       {:ok, decoded_content} ->
         {:ok, decoded_content}
 
-      {:error, :invalid} ->
-        {:error, {:invalid_content, @invalid_content_error_message, content}}
-
       {:error, reason} ->
         {:error, {:invalid_content, @invalid_content_error_message <> " Error: #{inspect(reason)}", content}}
-
-      {:error, reason, ch} ->
-        {:error,
-         {:invalid_content, @invalid_content_error_message <> " Error: #{inspect(reason)}, #{ch}", inspect(content)}}
     end
   end
 

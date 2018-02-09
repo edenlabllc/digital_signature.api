@@ -34,7 +34,7 @@ defmodule DigitalSignature.Web.Router do
 
   defp handle_errors(%Plug.Conn{status: 500} = conn, %{kind: kind, reason: reason, stack: stacktrace}) do
     LoggerJSON.log_error(kind, reason, stacktrace)
-    send_resp(conn, 500, Poison.encode!(%{errors: %{detail: "Internal server error"}}))
+    send_resp(conn, 500, Jason.encode!(%{errors: %{detail: "Internal server error"}}))
   end
 
   defp handle_errors(_, _), do: nil

@@ -31,7 +31,7 @@ defmodule DigitalSignature.Mixfile do
         :logger,
         :confex,
         :runtime_tools,
-        :poison,
+        :jason,
         :cowboy,
         :httpoison,
         :ecto,
@@ -66,7 +66,6 @@ defmodule DigitalSignature.Mixfile do
     [
       {:distillery, "~> 1.5", runtime: false},
       {:confex, "~> 3.3"},
-      {:poison, "~> 3.1"},
       {:ecto, "~> 2.2"},
       {:cowboy, "~> 1.1"},
       {:httpoison, "~> 0.13.0"},
@@ -78,8 +77,8 @@ defmodule DigitalSignature.Mixfile do
       {:excoveralls, ">= 0.5.0", only: [:dev, :test]},
       {:jvalid, "~> 0.6.0"},
       {:digital_signature_lib, git: "https://github.com/edenlabllc/digital_signature.lib.git"},
-      {:dogma, ">= 0.1.15", only: [:dev, :test]},
-      {:credo, ">= 0.8.10", only: [:dev, :test]}
+      {:credo, "~> 0.9.0-rc3", only: [:dev, :test]},
+      {:jason, "~> 1.0"}
     ]
   end
 
@@ -95,7 +94,7 @@ defmodule DigitalSignature.Mixfile do
   end
 
   # Aliases are shortcuts or tasks specific to the current project.
-  # For example, to create, migrate and run the seeds file at once:
+  # For example, to create, migrate and run the seeds file at once:m
   #
   #     $ mix ecto.setup
   #
