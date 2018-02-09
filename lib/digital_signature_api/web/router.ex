@@ -14,8 +14,8 @@ defmodule DigitalSignature.Web.Router do
   require Logger
 
   pipeline :api do
-    plug :accepts, ["json"]
-    plug :put_secure_browser_headers
+    plug(:accepts, ["json"])
+    plug(:put_secure_browser_headers)
 
     # Uncomment to enable versioning of your API
     # plug Multiverse, gates: [
@@ -27,9 +27,9 @@ defmodule DigitalSignature.Web.Router do
   end
 
   scope "/", DigitalSignature.Web do
-    pipe_through :api
+    pipe_through(:api)
 
-    post "/digital_signatures", DigitalSignaturesController, :index
+    post("/digital_signatures", DigitalSignaturesController, :index)
   end
 
   defp handle_errors(%Plug.Conn{status: 500} = conn, %{kind: kind, reason: reason, stack: stacktrace}) do

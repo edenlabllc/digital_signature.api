@@ -6,11 +6,14 @@ defmodule DigitalSignature.Cert.API do
   alias DigitalSignature.Cert
 
   def get_certs_map do
-    query = from p in Cert,
-      where: p.type in ["root", "tsp"] and p.active,
-      left_join: c in Cert,
-      on: c.parent == p.id and c.type == "ocsp" and c.active,
-      select: {p.type, p.data, c.data}
+    query =
+      from(
+        p in Cert,
+        where: p.type in ["root", "tsp"] and p.active,
+        left_join: c in Cert,
+        on: c.parent == p.id and c.type == "ocsp" and c.active,
+        select: {p.type, p.data, c.data}
+      )
 
     query
     |> Repo.all()
@@ -22,6 +25,7 @@ defmodule DigitalSignature.Cert.API do
 
     Map.put(map, :general, [new_root | general])
   end
+
   defp process_cert({"tsp", tsp_cert, _}, %{tsp: tsp} = map) do
     Map.put(map, :tsp, [tsp_cert | tsp])
   end

@@ -5,9 +5,9 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
   alias DigitalSignature.NifService
   require Logger
 
-  action_fallback DigitalSignature.Web.FallbackController
+  action_fallback(DigitalSignature.Web.FallbackController)
 
-  use_schema :digital_signatures, "specs/json_schemas/digital_signatures_request.json"
+  use_schema(:digital_signatures, "specs/json_schemas/digital_signatures_request.json")
 
   @invalid_content_error_message "Malformed encoded content. Probably, you have encoded corrupted JSON."
 
@@ -15,26 +15,28 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
     with :ok <- validate_schema(:digital_signatures, params),
          {:ok, signed_data} <- Base.decode64(Map.get(params, "signed_content")),
          {:ok, result} <- NifService.process_signed_data(signed_data, Map.get(params, "check")),
-         {:ok, content} <- decode_content(result)
-    do
-        result
-        |> Map.put(:content, content)
-        |> render_response(params, conn)
+         {:ok, content} <- decode_content(result) do
+      result
+      |> Map.put(:content, content)
+      |> render_response(params, conn)
     else
-        {:error, errors} when is_list(errors) ->
-          Enum.each(errors, &Logger.error(inspect &1))
-          {:error, errors}
-        {:error, error} ->
-          Logger.error(inspect error)
-          {:error, error}
-        :error ->
-          error = [{%{description: "Not a base64 string", params: [], rule: :invalid}, "$.signed_content"}]
-          Logger.error(inspect error)
-          {:error, error}
+      {:error, errors} when is_list(errors) ->
+        Enum.each(errors, &Logger.error(inspect(&1)))
+        {:error, errors}
+
+      {:error, error} ->
+        Logger.error(inspect(error))
+        {:error, error}
+
+      :error ->
+        error = [{%{description: "Not a base64 string", params: [], rule: :invalid}, "$.signed_content"}]
+        Logger.error(inspect(error))
+        {:error, error}
     end
   end
 
   defp decode_content(%{content: ""}), do: {:ok, ""}
+
   defp decode_content(%{content: content}) do
     case Poison.decode(content) do
       {:ok, decoded_content} ->
@@ -44,12 +46,12 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
         {:error, {:invalid_content, @invalid_content_error_message, content}}
 
       {:error, reason} ->
-        {:error, {:invalid_content, @invalid_content_error_message <> " Error: #{inspect reason}", content}}
+        {:error, {:invalid_content, @invalid_content_error_message <> " Error: #{inspect(reason)}", content}}
 
       {:error, reason, ch} ->
         {:error,
-          {:invalid_content, @invalid_content_error_message <> " Error: #{inspect reason}, #{ch}", inspect content}}
-      end
+         {:invalid_content, @invalid_content_error_message <> " Error: #{inspect(reason)}, #{ch}", inspect(content)}}
+    end
   end
 
   defp render_response(result, params, conn) do
