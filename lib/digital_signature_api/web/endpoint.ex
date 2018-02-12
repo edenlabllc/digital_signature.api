@@ -5,21 +5,23 @@ defmodule DigitalSignature.Web.Endpoint do
   use Phoenix.Endpoint, otp_app: :digital_signature_api
   alias Confex.Resolver
 
-  plug Plug.RequestId
-  plug EView.Plugs.Idempotency
-  plug Plug.LoggerJSON, level: Logger.level
+  plug(Plug.RequestId)
+  plug(EView.Plugs.Idempotency)
+  plug(Plug.LoggerJSON, level: Logger.level())
 
-  plug EView
+  plug(EView)
 
-  plug Plug.Parsers,
+  plug(
+    Plug.Parsers,
     parsers: [:json],
     pass: ["application/json"],
-    json_decoder: Poison
+    json_decoder: Jason
+  )
 
-  plug Plug.MethodOverride
-  plug Plug.Head
+  plug(Plug.MethodOverride)
+  plug(Plug.Head)
 
-  plug DigitalSignature.Web.Router
+  plug(DigitalSignature.Web.Router)
 
   @doc """
   Dynamically loads configuration from the system environment

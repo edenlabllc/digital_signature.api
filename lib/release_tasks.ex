@@ -21,35 +21,36 @@ defmodule DigitalSignature.ReleaseTasks do
   ]
 
   def migrate do
-    IO.puts "Loading digital_signature_api.."
+    IO.puts("Loading digital_signature_api..")
     # Load the code for digital_signature_api, but don't start it
     :ok = Application.load(:digital_signature_api)
 
-    IO.puts "Starting dependencies.."
+    IO.puts("Starting dependencies..")
     # Start apps necessary for executing migrations
     Enum.each(@start_apps, &Application.ensure_all_started/1)
 
     # Start the Repo(s) for digital_signature_api
-    IO.puts "Starting repos.."
-    Enum.each(@repos, &(&1.start_link(pool_size: 1)))
+    IO.puts("Starting repos..")
+    Enum.each(@repos, & &1.start_link(pool_size: 1))
 
     # Run migrations
     Enum.each(@apps, &run_migrations_for/1)
 
     # Run the seed script if it exists
     seed_script = seed_path(:digital_signature_api)
+
     if File.exists?(seed_script) do
-      IO.puts "Running seed script.."
+      IO.puts("Running seed script..")
       Code.eval_file(seed_script)
     end
 
     # Signal shutdown
-    IO.puts "Success!"
+    IO.puts("Success!")
     :init.stop()
   end
 
   defp run_migrations_for(app) do
-    IO.puts "Running migrations for #{app}"
+    IO.puts("Running migrations for #{app}")
     Enum.each(@repos, &Migrator.run(&1, migrations_path(app), :up, all: true))
   end
 

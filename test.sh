@@ -1,6 +1,7 @@
 #!/bin/bash
 
-docker build -t digital_signature_api_test -f Dockerfile.test .
+IMAGE=$(docker build -f Dockerfile.test . | tail -1 | awk '{ print $NF }')
 
-docker run --rm -i -t digital_signature_api_test:latest
+docker run --rm -it $IMAGE /bin/bash -c 'service postgresql start; cd /home/digital_signature.api; mix test'
 
+#docker rmi $IMAGE

@@ -1,4 +1,6 @@
 defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
+  @moduledoc false
+
   use DigitalSignature.Web.ConnCase
   alias DigitalSignature.Cert
   alias DigitalSignature.Repo
@@ -17,7 +19,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
     end
 
     test "required params validation works", %{conn: conn} do
-      conn = post conn, digital_signatures_path(conn, :index), %{}
+      conn = post(conn, digital_signatures_path(conn, :index), %{})
 
       resp = json_response(conn, 422)
       assert Map.has_key?(resp, "error")
@@ -41,10 +43,11 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
     end
 
     test "signed_content_encoding validation works", %{conn: conn} do
-      conn = post conn, digital_signatures_path(conn, :index), %{
-        "signed_content" => "",
-        "signed_content_encoding" => "base58"
-      }
+      conn =
+        post(conn, digital_signatures_path(conn, :index), %{
+          "signed_content" => "",
+          "signed_content_encoding" => "base58"
+        })
 
       resp = json_response(conn, 422)
       assert Map.has_key?(resp, "error")
@@ -63,10 +66,11 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
     end
 
     test "signed_content validation works", %{conn: conn} do
-      conn = post conn, digital_signatures_path(conn, :index), %{
-        "signed_content" => "111",
-        "signed_content_encoding" => "base64"
-      }
+      conn =
+        post(conn, digital_signatures_path(conn, :index), %{
+          "signed_content" => "111",
+          "signed_content_encoding" => "base64"
+        })
 
       resp = json_response(conn, 422)
       assert Map.has_key?(resp, "error")
@@ -88,7 +92,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       data = get_data("test/fixtures/sign1.json")
       request = create_request(data)
 
-      conn = post conn, digital_signatures_path(conn, :index), request
+      conn = post(conn, digital_signatures_path(conn, :index), request)
       resp = json_response(conn, 200)
 
       assert mock_correct_response_data("test/fixtures/sign1.json") == resp["data"]
@@ -98,7 +102,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       data = get_data("test/fixtures/sign2.json")
       request = create_request(data)
 
-      conn = post conn, digital_signatures_path(conn, :index), request
+      conn = post(conn, digital_signatures_path(conn, :index), request)
       resp = json_response(conn, 200)
 
       assert mock_correct_response_data("test/fixtures/sign2.json") == resp["data"]
@@ -110,7 +114,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
         "signed_content_encoding" => "base64"
       }
 
-      conn = post conn, digital_signatures_path(conn, :index), bad_request
+      conn = post(conn, digital_signatures_path(conn, :index), bad_request)
       resp = json_response(conn, 200)
 
       data = resp["data"]
@@ -119,22 +123,14 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       assert data["validation_error_message"] == "error processing signed data"
     end
 
-    test "processign valid signed declaration", %{conn: conn} do
-      data = get_data("test/fixtures/signed_declaration_request.json")
-      conn = post conn, digital_signatures_path(conn, :index), data
+    test "processign valid signed declaration with outdated signature", %{conn: conn} do
+      data = get_data("test/fixtures/outdated_cert.json")
+      conn = post(conn, digital_signatures_path(conn, :index), data)
 
       resp = json_response(conn, 200)
 
-      assert resp["data"]["is_valid"]
-    end
-
-    test "processign another valid signed declaration", %{conn: conn} do
-      data = get_data("test/fixtures/signed_declaration_request2.json")
-      conn = post conn, digital_signatures_path(conn, :index), data
-
-      resp = json_response(conn, 200)
-
-      assert resp["data"]["is_valid"]
+      refute resp["data"]["is_valid"]
+      assert resp["data"]["validation_error_message"] == "certificate timestamp expired"
     end
   end
 
@@ -150,7 +146,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
 
     test "Can return correct error", %{conn: conn} do
       data = get_data("test/fixtures/sign1.json")
-      conn = post conn, digital_signatures_path(conn, :index), data
+      conn = post(conn, digital_signatures_path(conn, :index), data)
 
       resp = json_response(conn, 200)
       data = resp["data"]
@@ -159,24 +155,34 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       assert data["validation_error_message"] == "matching ROOT certificate not found"
     end
 
-    test "Can process data signed with key where some info fieds are invalid" , %{conn: conn} do
-      data = get_data("test/fixtures/invalid_sign_data.json")
-      conn = post conn, digital_signatures_path(conn, :index), data
+    test "Can process data signed with key where some info fieds are invalid and certificate is absent", %{conn: conn} do
+      data = get_data("test/fixtures/no_cert_and_invalid_signer.json")
+      conn = post(conn, digital_signatures_path(conn, :index), data)
 
       resp = json_response(conn, 200)
+
+      data = resp["data"]
+
+      refute data["is_valid"]
+      assert data["validation_error_message"] == "matching ROOT certificate not found"
+
+      # this field contains invalid (non UTF-8) data inside the signed package - so we are returing an empty string
+      assert data["signer"]["organization_name"] == ""
+      # this field contains invalid (non UTF-8) data inside the signed package - so we are returing an empty string
+      assert data["signer"]["organizational_unit_name"] == ""
     end
   end
 
   defp get_data(json_file) do
     {:ok, file} = File.read(json_file)
-    {:ok, json} = Poison.decode(file)
+    {:ok, json} = Jason.decode(file)
 
     Map.take(json["data"], ["signed_content", "signed_content_encoding"])
   end
 
   defp mock_correct_response_data(json_file) do
     {:ok, file} = File.read(json_file)
-    {:ok, json} = Poison.decode(file)
+    {:ok, json} = Jason.decode(file)
 
     Map.put(json["data"], "validation_error_message", "")
   end
@@ -190,121 +196,109 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
 
   defp insert_dfs_certs do
     {:ok, %{id: dfs_root_id}} =
-      Repo.insert(
-        %Cert{
-          name: "DFS",
-          data: File.read!("test/fixtures/CA-DFS.cer"),
-          parent: nil,
-          type: "root",
-          active: true
+      Repo.insert(%Cert{
+        name: "DFS",
+        data: File.read!("test/fixtures/CA-DFS.cer"),
+        parent: nil,
+        type: "root",
+        active: true
       })
 
-    Repo.insert!(
-      %Cert{
-        name: "DFS",
-        data: File.read!("test/fixtures/CA-OCSP-DFS.cer"),
-        parent: dfs_root_id,
-        type: "ocsp",
-        active: true
+    Repo.insert!(%Cert{
+      name: "DFS",
+      data: File.read!("test/fixtures/CA-OCSP-DFS.cer"),
+      parent: dfs_root_id,
+      type: "ocsp",
+      active: true
     })
 
-    Repo.insert!(
-      %Cert{
-        name: "DFS",
-        data: File.read!("test/fixtures/CA-TSP-DFS.cer"),
-        parent: nil,
-        type: "tsp",
-        active: true
+    Repo.insert!(%Cert{
+      name: "DFS",
+      data: File.read!("test/fixtures/CA-TSP-DFS.cer"),
+      parent: nil,
+      type: "tsp",
+      active: true
     })
   end
 
   defp insert_justice_certs do
     {:ok, %{id: j_root_id}} =
-      Repo.insert(
-        %Cert{
-          name: "Justice",
-          data: File.read!("test/fixtures/CA-Justice.cer"),
-          parent: nil,
-          type: "root",
-          active: true
+      Repo.insert(%Cert{
+        name: "Justice",
+        data: File.read!("test/fixtures/CA-Justice.cer"),
+        parent: nil,
+        type: "root",
+        active: true
       })
 
-    Repo.insert!(
-      %Cert{
-        name: "Justice",
-        data: File.read!("test/fixtures/OCSP-Server Justice.cer"),
-        parent: j_root_id,
-        type: "ocsp",
-        active: true
+    Repo.insert!(%Cert{
+      name: "Justice",
+      data: File.read!("test/fixtures/OCSP-Server Justice.cer"),
+      parent: j_root_id,
+      type: "ocsp",
+      active: true
     })
 
-    Repo.insert!(
-      %Cert{
-        name: "Justice",
-        data: File.read!("test/fixtures/TSP-Server Justice.cer"),
-        parent: nil,
-        type: "tsp",
-        active: true
+    Repo.insert!(%Cert{
+      name: "Justice",
+      data: File.read!("test/fixtures/TSP-Server Justice.cer"),
+      parent: nil,
+      type: "tsp",
+      active: true
     })
   end
 
   defp insert_ucsku_certs do
     {:ok, %{id: ucsk_root_id}} =
-      Repo.insert(
-        %Cert{
-          name: "ucsku",
-          data: File.read!("test/fixtures/cert1599998-root.crt"),
-          parent: nil,
-          type: "root",
-          active: true
+      Repo.insert(%Cert{
+        name: "ucsku",
+        data: File.read!("test/fixtures/cert1599998-root.crt"),
+        parent: nil,
+        type: "root",
+        active: true
       })
 
-    Repo.insert!(
-      %Cert{
-        name: "ucsku",
-        data: File.read!("test/fixtures/cert14493930-oscp.crt"),
-        parent: ucsk_root_id,
-        type: "ocsp",
-        active: true
+    Repo.insert!(%Cert{
+      name: "ucsku",
+      data: File.read!("test/fixtures/cert14493930-oscp.crt"),
+      parent: ucsk_root_id,
+      type: "ocsp",
+      active: true
     })
 
-    Repo.insert!(
-      %Cert{
-        name: "ucsku",
-        data: File.read!("test/fixtures/cert14491837-tsp.crt"),
-        parent: nil,
-        type: "tsp",
-        active: true
+    Repo.insert!(%Cert{
+      name: "ucsku",
+      data: File.read!("test/fixtures/cert14491837-tsp.crt"),
+      parent: nil,
+      type: "tsp",
+      active: true
     })
   end
 
   defp insert_privat_certs do
     {:ok, %{id: ucsk_root_id}} =
-      Repo.insert(
-        %Cert{
-          name: "Privat",
-          data: File.read!("test/fixtures/CA-3004751DEF2C78AE010000000100000049000000.cer"),
-          parent: nil,
-          type: "root",
-          active: true
+      Repo.insert(%Cert{
+        name: "Privat",
+        data: File.read!("test/fixtures/CA-3004751DEF2C78AE010000000100000049000000.cer"),
+        parent: nil,
+        type: "root",
+        active: true
       })
 
-    Repo.insert!(
-      %Cert{
-        name: "Privat",
-        data: File.read!("test/fixtures/CAOCSPServer-D84EDA1BB9381E802000000010000001A000000.cer"),
-        parent: ucsk_root_id,
-        type: "ocsp",
-        active: true
+    Repo.insert!(%Cert{
+      name: "Privat",
+      data: File.read!("test/fixtures/CAOCSPServer-D84EDA1BB9381E802000000010000001A000000.cer"),
+      parent: ucsk_root_id,
+      type: "ocsp",
+      active: true
     })
 
-    Repo.insert!(
-      %Cert{
-        name: "Privat",
-        data: File.read!("test/fixtures/CATSPServer-3004751DEF2C78AE02000000010000004A000000.cer"),
-        parent: nil,
-        type: "tsp",
-        active: true
+    Repo.insert!(%Cert{
+      name: "Privat",
+      data: File.read!("test/fixtures/CATSPServer-3004751DEF2C78AE02000000010000004A000000.cer"),
+      parent: nil,
+      type: "tsp",
+      active: true
     })
   end
 end

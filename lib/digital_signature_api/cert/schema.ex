@@ -5,11 +5,11 @@ defmodule DigitalSignature.Cert do
 
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "certs" do
-    field :name, :string
-    field :data, :binary
-    field :parent, Ecto.UUID
-    field :type, :string
-    field :active, :boolean
+    field(:name, :string)
+    field(:data, :binary)
+    field(:parent, Ecto.UUID)
+    field(:type, :string)
+    field(:active, :boolean)
 
     timestamps()
   end
