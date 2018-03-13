@@ -195,6 +195,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
   end
 
   defp insert_dfs_certs do
+    # Original Root with updated OCSP
     {:ok, %{id: dfs_root_id}} =
       Repo.insert(%Cert{
         name: "DFS",
@@ -206,14 +207,50 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
 
     Repo.insert!(%Cert{
       name: "DFS",
-      data: File.read!("test/fixtures/CA-OCSP-DFS.cer"),
+      data: File.read!("test/fixtures/OCSP-IDDDFS-080218.cer"),
       parent: dfs_root_id,
       type: "ocsp",
       active: true
     })
 
+    # Original OCSP - disabled
     Repo.insert!(%Cert{
       name: "DFS",
+      data: File.read!("test/fixtures/CA-OCSP-DFS.cer"),
+      parent: dfs_root_id,
+      type: "ocsp",
+      active: false
+    })
+
+    # Updated Root with updates OCSP
+    {:ok, %{id: new_dfs_root_id}} =
+      Repo.insert(%Cert{
+        name: "DFS_NEW",
+        data: File.read!("test/fixtures/CA-IDDDFS-080218.cer"),
+        parent: nil,
+        type: "root",
+        active: true
+      })
+
+    Repo.insert!(%Cert{
+      name: "DFS_NEW",
+      data: File.read!("test/fixtures/OCSP-IDDDFS-080218.cer"),
+      parent: new_dfs_root_id,
+      type: "ocsp",
+      active: true
+    })
+
+    # TSP
+    Repo.insert!(%Cert{
+      name: "DFS",
+      data: File.read!("test/fixtures/TSA-IDDDFS-140218.cer"),
+      parent: nil,
+      type: "tsp",
+      active: true
+    })
+
+    Repo.insert!(%Cert{
+      name: "DFS_OLD",
       data: File.read!("test/fixtures/CA-TSP-DFS.cer"),
       parent: nil,
       type: "tsp",
