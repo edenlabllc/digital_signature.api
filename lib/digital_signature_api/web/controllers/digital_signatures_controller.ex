@@ -38,6 +38,8 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
   defp decode_content(%{content: ""}), do: {:ok, ""}
 
   defp decode_content(%{content: content}) do
+    content = String.replace_trailing(content, <<0>>, "")
+
     case Jason.decode(content) do
       {:ok, decoded_content} ->
         {:ok, decoded_content}
