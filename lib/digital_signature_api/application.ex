@@ -6,7 +6,7 @@ defmodule DigitalSignature do
   alias DigitalSignature.Web.Endpoint
   alias Confex.Resolver
 
-  @certs_cache_ttl 5 * 60
+  @certs_cache_ttl 15 * 60
 
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
   # for more information on OTP Applications
