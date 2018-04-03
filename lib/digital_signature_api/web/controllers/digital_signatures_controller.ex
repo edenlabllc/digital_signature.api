@@ -45,7 +45,8 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
         {:ok, decoded_content}
 
       {:error, reason} ->
-        {:error, {:invalid_content, @invalid_content_error_message <> " Error: #{inspect(reason)}", content}}
+        Logger.error("Content cannot be decoded from Json, error: #{inspect(reason)}, content: #{content}")
+        {:error, {:invalid_content, @invalid_content_error_message <> " Error: #{inspect(reason)}", inspect(content)}}
     end
   end
 
