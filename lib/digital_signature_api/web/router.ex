@@ -34,6 +34,8 @@ defmodule DigitalSignature.Web.Router do
 
   defp handle_errors(%Plug.Conn{status: 500} = conn, %{kind: kind, reason: reason, stack: stacktrace}) do
     LoggerJSON.log_error(kind, reason, stacktrace)
+    Logger.configure(truncate: :infinity)
+    Logger.error("Internal server error, reason: #{inspect(reason)}, request body: #{inspect(conn.body_params)}")
     send_resp(conn, 500, Jason.encode!(%{errors: %{detail: "Internal server error"}}))
   end
 
