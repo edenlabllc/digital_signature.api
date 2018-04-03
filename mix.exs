@@ -1,7 +1,7 @@
 defmodule DigitalSignature.Mixfile do
   use Mix.Project
 
-  @version "1.47.0"
+  @version "1.48.0"
 
   def project do
     [
