@@ -6,7 +6,8 @@ defmodule DigitalSignature do
   alias DigitalSignature.Web.Endpoint
   alias Confex.Resolver
 
-  @certs_cache_ttl 15 * 60
+  # 15 mins
+  @certs_cache_ttl 15 * 60 * 1000
 
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
   # for more information on OTP Applications
@@ -21,7 +22,7 @@ defmodule DigitalSignature do
       supervisor(DigitalSignature.Web.Endpoint, []),
       # Starts a worker by calling: DigitalSignature.Worker.start_link(arg1, arg2, arg3)
       # worker(DigitalSignature.Worker, [arg1, arg2, arg3]),
-      worker(DigitalSignature.NifService, [@certs_cache_ttl])
+      worker(DigitalSignature.CertCache, [@certs_cache_ttl])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
