@@ -77,7 +77,7 @@ defmodule DigitalSignature.Mixfile do
       {:excoveralls, ">= 0.5.0", only: [:dev, :test]},
       {:jvalid, "~> 0.6.0"},
       {:digital_signature_lib, git: "https://github.com/edenlabllc/digital_signature.lib.git"},
-      {:credo, "~> 0.9.0-rc3", only: [:dev, :test]},
+      {:credo, "~> 0.9.1", only: [:dev, :test]},
       {:jason, "~> 1.0"}
     ]
   end

@@ -30,7 +30,7 @@ defmodule DigitalSignature.CertCache do
     GenServer.start_link(__MODULE__, cache_ttl, name: __MODULE__)
   end
 
-  def get_certs() do
+  def get_certs do
     certs = GenServer.call(__MODULE__, :get_certs)
     {:ok, certs}
   end
