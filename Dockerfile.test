@@ -11,6 +11,9 @@ USER root
 ADD . /home/digital_signature.api
 WORKDIR /home/digital_signature.api
 
+ENV TZ=Europe/Kiev
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 ENV MIX_ENV=test
 
 RUN mix do \

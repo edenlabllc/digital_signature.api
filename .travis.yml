@@ -10,10 +10,14 @@ addons:
   apt:
     packages:
       - docker-ce
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-6
 elixir:
-  - 1.6.3
+  - 1.6.4
 otp_release:
-  - 20.2
+  - 20.3
 notifications:
   slack:
     rooms:
@@ -23,6 +27,7 @@ env:
   global:
     - Chart=digital-signature
     - MIX_ENV=test
+    - CC=gcc-6
     - DOCKER_HUB_ACCOUNT=edenlabllc
     - MAIN_BRANCHES="master develop staging" # Branches on which you want version to be incremented
     - RELEASE_BRANCH="master"
