@@ -16,7 +16,7 @@ RUN mix do \
   deps.compile, \
   release
 
-FROM elixir:1.6
+FROM elixir:1.6-slim
 
 ARG APP_NAME
 ARG APP_VERSION
