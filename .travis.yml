@@ -1,57 +1,57 @@
-language: elixir
-cache:
-  directories:
-    - deps
-services:
-  - docker
-  - postgresql
+language: bash
+
+sudo: true
+
 addons:
-  postgresql: "9.6"
   apt:
     packages:
       - docker-ce
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - g++-6
-elixir:
-  - 1.6.4
-otp_release:
-  - 20.3
+
 notifications:
   slack:
     rooms:
       - secure: "FT8IBl8IzXpiIb8zYcJUbPglkHQ4pQM/zRYVoWlybjmmUi45In52byvPgCdYKHee/ZaqnE230t0tbf06GZGyKZ+OGfTd1zn84yYL0vCocxofVDQSsfJmrLigX6loCZ54GB3CSvhfWRKUdFYRDhQ6vSLlZCuTx31bAINFAJG2Vb/bAbOLtjKf89TANfECTUZ3C+FOykBwbdo3y/5635ErDTb5CGVhRaNmWnwxInmrlaRsO/mpYC1MtbOjHfup292m2Blv67iv6vpGtpD80a/VuJws2Dtpg9quGJQrD0EC5v1Q1I1MKkPwuVLdH5anR+hVqaECaj0EtPgrA1nW1RxFt7joobYT4VjWYoMV1oXZ0Ze+zeUeIWJULVd/2E8a61zX7Ge/uZZBfjTIxILF8ZG0fsOGfnakbP7Q9fF53vjIJs0WqjyYRXehWdxdy2/G1woMu0BBB8AQsdPTNaoNblrv2zPqpSUmQROMDeHIDFSyt6mHhryRZfYcrwJPeNOzIyHhSTiMxO6KZxmKCfzzl11hWSLRn+PdAgTHMwOhWc9SyPkcIRlLZZ2BeFWtoLX/4JnlH5UGsogB8fR5vmz//nl7mWJkbIzXA8lpqHPzdUzytNw0qNiZ6729EJ7N8dB+hdvVJMwhPXelgRcqBf60v1Q9kR9/BUqlVCm8axcKNxgY8T4="
     on_success: always
+
 env:
   global:
+    - DOCKER_NET=ds_test_db
     - Chart=digital-signature
-    - MIX_ENV=test
-    - CC=gcc-6
     - DOCKER_HUB_ACCOUNT=edenlabllc
     - MAIN_BRANCHES="master develop staging" # Branches on which you want version to be incremented
     - RELEASE_BRANCH="master"
     # Docker and GitHub credentials
     - secure: "uceBiEXXOVuv0GVSjdC0G4yMoC/d4rOVW9B+CdKNIoTy7yB8wLxBoeLzuVFonX2BHXcBCkH07H+oMgrTpIJSj5r2TS/MrbCdphWeeuQ7LsEWKtUZsWl6Q0cdRtls67mlIjGYU+IVK4YcCOyUdcZemtj789poTx+YMyYypxEVLmITkjlqTdi7nGjETJ5weXyIYB5PsVONGJSfCOiZ0ebm9itQypUAoMXu3XGGZKgA0TKTQ4A7q1c8bbpEU1UNg8fm5p4IogJgecx9rY18tj1v9bQJ4n6sHke+cePcLk8zEsMZhvuTbeJPZYJdxTdJm/myZQirs9De5PM5Qu/i64sOefocXcUYu/53s4n1z6VN/UH2SpfZLuBO57NN3fkCwO1TB5BDDdVwZn1/oCzFO/LhWPZLn5/Of0vnv406lhofxpCSpDpHxFc6M9JICSaOO15t6PP63GSkYcNcmw6ylyBeC+7piSOAkRPiVfeTbUGjRxOP7EC61VO6lPlQr8DIjcb0kLpxpyP+IZCtNg0e/yrlqEIrvONRUqqEoXu5fo2zbOuXBC9eXVklrK/gReU2pkitsLKqfvjACG/BRD5MZX4M3ZhVHbYbG5Wat9GqkHWkg1OT9Z6yBTAtvQm5QspNmm1uSeu965B5xUnaL1OMMW3qvw3ZwX0MLetumHnLqmB7rFg="
     - secure: "SqmpfEN1MtUatTCrR5jK2XmNSOwdFDtZujTLh3rMu5LHcvs1ErEykE4eX4S2GsrI+0be65OUE1SO6QXDUqqGxoZMOC8y4l01I14FZbITFzv24+LaFHioAGhj7qDGBl0wl/sn2u2+Dc+dbR9dtioY/pQZ9CInHjshqvniVgpV2flQt8x00jvSqnuHEIh2rOVk/nP5N7gSNDEwdvjvx2Xj4pxxDyPAFhdtiJFxVZSn+6yUoq/Lynw3JLnTl1WRx5QL6qni5DtVUht/Qag2S3n2SiqkAI0lvu+UO6PHj0KdvlGmBkfdhRzdITSoaLgdjR6OMvfHlqjqvuveeNXgEGIpL0bsqghFhLZz1fM+zp6JBY4mA1p4WpHHX4O8IY+QJrTZGkt0pXnhdYwsBaxuhNYM6NopjBc7y/4duSGkJpfAbgAUWZKd8S5weLkwWJlBj+5rjRXhc33JfxsusceA7ZzOPmZcKDn6qQ5qzGvHF63d2zV8DVVmvflGi4jzDVuk026PED6d6zspyycUkog/+ABImIBY3m53o2Rghfyy1oMq3/j8gSfDoUJA2IpThRazQMyPs75j5jOG5JtZ1/ca/V7f4YnoNubN/vHAC9I2dq04TlRCFKqwZx1PQli6hu6ZauCvoe4uSzhlTZ6FPZy65WdUL0YtnnHLf7PvvekKy8Ylavg="
+
 branches:
   # Releases are generated automatically, stop infinite build loop
   except:
     - /[0-9]*\.[0-9]*\.[0-9]*/
-before_install:
-  # Expose DB to Docker container
-  - sudo ./bin/ci/init-db.sh
+
+before_script:
+  - sudo docker network create $DOCKER_NET
+  - POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres docker run -d --name ds_test_db --net $DOCKER_NET postgres:9.6
+  - IMAGE=$(docker build -f Dockerfile.test . | tail -1 | awk '{ print $NF }')
+  - CONTAINER=$(docker run -d --net $DOCKER_NET $IMAGE /bin/bash -c 'cd /home/digital_signature.api; mix test --exclude pending --trace')
+
 script:
+  # Check test container output
+  - sudo docker attach $CONTAINER
+  - sudo docker wait $CONTAINER || travis_terminate 1
   # Increment version in mix.exs
   - ./bin/ci/version-increment.sh || travis_terminate 1
-  # Run all tests except pending ones
-  - ./bin/mix_tests.sh || travis_terminate 1
   # Build Docker container
   - ./bin/build.sh || travis_terminate 1
-  # Initialize DB for Docker container
-  - MIX_ENV=dev mix ecto.setup
   # Run Docker container
   - sudo ./bin/start.sh || travis_terminate 1
+  # Deliver and Deploy Docker container
   - ./bin/ci/push.sh || travis_terminate 1
   - openssl aes-256-cbc -K $encrypted_134bca1e162b_key -iv $encrypted_134bca1e162b_iv -in eHealth-8110bd102a69.json.enc -out eHealth-8110bd102a69.json -d
   - sudo ./bin/deploy.sh || travis_terminate 1
+
+after_script:
+  - sudo docker stop ds_test_db
+  - sudo docker rm ds_test_db
+  - sudo docker rm $CONTAINER
+  - sudo docker network rm $DOCKER_NET

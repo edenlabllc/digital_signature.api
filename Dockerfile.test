@@ -1,15 +1,10 @@
 FROM elixir:1.6
 
-RUN apt-get update && apt-get -yqq install \
-    postgresql-9.6 \
-    postgresql-client-9.6
-
-USER postgres
-RUN service postgresql start && psql -c "ALTER USER postgres PASSWORD 'postgres';"
-
-USER root
 ADD . /home/digital_signature.api
 WORKDIR /home/digital_signature.api
+
+RUN ln -s /home/digital_signature.api/priv/libUACryptoQ.so /usr/local/lib/libUACryptoQ.so.1
+ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
 ENV TZ=Europe/Kiev
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone

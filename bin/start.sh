@@ -12,25 +12,13 @@ fi
 # Extract project name and version from mix.exs
 PROJECT_NAME=$(sed -n 's/.*app: :\([^, ]*\).*/\1/pg' "${PROJECT_DIR}/mix.exs")
 PROJECT_VERSION=$(sed -n 's/.*@version "\([^"]*\)".*/\1/pg' "${PROJECT_DIR}/mix.exs")
-HOST_IP=`ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' | head -n 1`
-HOST_NAME="travis"
 
 echo "[I] Starting a Docker container '${PROJECT_NAME}' (version '${PROJECT_VERSION}') from path '${PROJECT_DIR}'.."
-echo "[I] Assigning parent host '${HOST_NAME}' with IP '${HOST_IP}'."
-
-# Allow to pass -i option to start container in interactive mode
-OPTS="-d"
-while getopts "i" opt; do
-  case "$opt" in
-    i)  OPTS="-it --rm"
-        ;;
-  esac
-done
 
 docker run -p 4000:4000 \
        --env-file .env \
-       ${OPTS} \
-       --add-host=$HOST_NAME:$HOST_IP \
+       -d \
+       --net ${DOCKER_NET} \
        --name ${PROJECT_NAME} \
        "${PROJECT_NAME}:${PROJECT_VERSION}"
 sleep 5
@@ -43,4 +31,7 @@ IS_RUNNING=$(docker inspect --format='{{ .State.Running }}' ${PROJECT_NAME});
 if [ -z "$IS_RUNNING" ] || [ $IS_RUNNING != "true" ]; then
   echo "[E] Container is not started.";
   exit 1;
+else
+  docker stop ${PROJECT_NAME}
+  docker rm ${PROJECT_NAME}
 fi;
