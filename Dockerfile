@@ -7,6 +7,9 @@ ADD . /home/app
 
 WORKDIR /home/app
 
+RUN ln -s /home/app/priv/libUACryptoQ.so /usr/local/lib/libUACryptoQ.so.1
+ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+
 ENV MIX_ENV=prod
 
 RUN mix do \
@@ -25,6 +28,9 @@ ENV TZ=Europe/Kiev
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 WORKDIR /home/app
+
+ADD ./priv/libUACryptoQ.so /usr/local/lib/libUACryptoQ.so.1
+ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
 COPY --from=builder /home/app/_build/prod/rel/${APP_NAME}/releases/${APP_VERSION}/${APP_NAME}.tar.gz .
 
