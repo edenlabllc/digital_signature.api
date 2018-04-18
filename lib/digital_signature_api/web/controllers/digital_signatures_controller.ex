@@ -2,7 +2,6 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
   @moduledoc false
   use DigitalSignature.Web, :controller
   use JValid
-  alias DigitalSignature.CertCache
   alias DigitalSignature.NifService
   require Logger
 
@@ -15,8 +14,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
   def index(conn, params) do
     with :ok <- validate_schema(:digital_signatures, params),
          {:ok, signed_data} <- Base.decode64(Map.get(params, "signed_content")),
-         {:ok, certs} <- CertCache.get_certs(),
-         {:ok, result} <- NifService.process_signed_data(signed_data, Map.get(params, "check"), certs),
+         {:ok, result} <- NifService.process_signed_data(signed_data, Map.get(params, "check")),
          {:ok, content} <- decode_content(result) do
       result
       |> Map.put(:content, content)

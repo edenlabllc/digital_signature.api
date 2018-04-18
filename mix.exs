@@ -79,7 +79,8 @@ defmodule DigitalSignature.Mixfile do
       {:digital_signature_lib,
        git: "https://github.com/edenlabllc/digital_signature.lib.git", branch: "link_shared_uacrypto_library"},
       {:credo, "~> 0.9.1", only: [:dev, :test]},
-      {:jason, "~> 1.0"}
+      {:jason, "~> 1.0"},
+      {:poolboy, "~> 1.5"}
     ]
   end
 

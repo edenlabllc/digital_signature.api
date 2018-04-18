@@ -45,6 +45,11 @@ config :logger, :console,
 
 config :phoenix, :format_encoders, json: Jason
 
+config :digital_signature_api, DigitalSignature.CertCache,
+  certs_cache_ttl: {:system, :integer, "CERTS_CACHE_TTL", 30 * 60 * 1000}
+
+config :digital_signature_api, DigitalSignature.Poolboy, nif_workers: {:system, :integer, "NIF_WORKERS", 5}
+
 # It is also possible to import configuration files, relative to this
 # directory. For example, you can emulate configuration per environment
 # by uncommenting the line below and defining dev.exs, test.exs and such.

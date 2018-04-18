@@ -5,9 +5,8 @@ defmodule DigitalSignature do
   use Application
   alias DigitalSignature.Web.Endpoint
   alias Confex.Resolver
-
-  # 15 mins
-  @certs_cache_ttl 15 * 60 * 1000
+  alias DigitalSignature.CertCache
+  alias DigitalSignature.Poolboy
 
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
   # for more information on OTP Applications
@@ -22,7 +21,9 @@ defmodule DigitalSignature do
       supervisor(DigitalSignature.Web.Endpoint, []),
       # Starts a worker by calling: DigitalSignature.Worker.start_link(arg1, arg2, arg3)
       # worker(DigitalSignature.Worker, [arg1, arg2, arg3]),
-      worker(DigitalSignature.CertCache, [@certs_cache_ttl])
+      worker(DigitalSignature.CertCache, [CertCache.certs_ttl()]),
+      # Poolboy
+      :poolboy.child_spec(Poolboy.pool_name(), Poolboy.poolboy_config(), [])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
