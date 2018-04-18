@@ -34,4 +34,6 @@ defmodule DigitalSignature.CertCache do
     certs = GenServer.call(__MODULE__, :get_certs)
     {:ok, certs}
   end
+
+  def certs_ttl, do: Confex.fetch_env!(:digital_signature_api, DigitalSignature.CertCache)[:certs_cache_ttl]
 end

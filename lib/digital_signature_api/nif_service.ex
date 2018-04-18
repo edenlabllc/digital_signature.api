@@ -1,10 +1,10 @@
 defmodule DigitalSignature.NifService do
-  @moduledoc """
-  Process signed data via NIF functions
-  """
+  @moduledoc false
+  alias DigitalSignature.Poolboy
 
-  def process_signed_data(signed_data, check, certs) do
-    check = unless is_boolean(check), do: true
-    DigitalSignatureLib.processPKCS7Data(signed_data, certs, check)
+  def process_signed_data(signed_data, check) do
+    :poolboy.transaction(Poolboy.pool_name(), fn worker ->
+      GenServer.call(worker, {:process_signed_data, signed_data, check})
+    end)
   end
 end
