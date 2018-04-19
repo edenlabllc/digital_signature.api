@@ -98,6 +98,41 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       assert mock_correct_response_data("test/fixtures/sign1.json") == resp["data"]
     end
 
+    @tag :pending
+    test "processing valid encoded data 25 times in a row", %{conn: conn} do
+      data = get_data("test/fixtures/sign1.json")
+      request = create_request(data)
+      expected_response = mock_correct_response_data("test/fixtures/sign1.json")
+
+      Enum.each(1..25, fn _ ->
+        response =
+          conn
+          |> post(digital_signatures_path(conn, :index), request)
+          |> json_response(200)
+
+        assert expected_response == response["data"]
+      end)
+    end
+
+    @tag :pending
+    test "processing valid encoded data 25 times in parallel", %{conn: conn} do
+      data = get_data("test/fixtures/sign1.json")
+      request = create_request(data)
+      expected_response = mock_correct_response_data("test/fixtures/sign1.json")
+
+      Enum.map(1..25, fn _ ->
+        Task.async(fn ->
+          conn
+          |> post(digital_signatures_path(conn, :index), request)
+          |> json_response(200)
+        end)
+      end)
+      |> Enum.each(fn task ->
+        response = Task.await(task)
+        assert expected_response == response["data"]
+      end)
+    end
+
     test "processing valid encoded data works again", %{conn: conn} do
       data = get_data("test/fixtures/sign2.json")
       request = create_request(data)
