@@ -37,7 +37,7 @@ before_script:
 
 script:
   # Check test container output
-  - sudo docker attach $CONTAINER
+  - sudo docker attach $CONTAINER || travis_terminate 1
   - sudo docker wait $CONTAINER || travis_terminate 1
   # Increment version in mix.exs
   - ./bin/ci/version-increment.sh || travis_terminate 1
