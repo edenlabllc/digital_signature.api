@@ -23,6 +23,7 @@ uploads/*
 
 # Ignore Docker artifacts
 Dockerfile
+Dockerfile.*
 .dockerignore
 
 # Ignore markdown description
@@ -40,3 +41,9 @@ bin/ci
 bin/build.sh
 bin/install-git-hooks.sh
 bin/start.sh
+test.sh
+
+# Ignore misc artefacts
+.elixir_ls
+.vscode
+
