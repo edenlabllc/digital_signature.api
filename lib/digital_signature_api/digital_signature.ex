@@ -1,4 +1,6 @@
 defmodule DigitalSignature.API do
+  @moduledoc false
+
   alias DigitalSignature.NifService
   require Logger
 

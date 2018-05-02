@@ -105,7 +105,8 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       conn = post(conn, digital_signatures_path(conn, :index), request)
       resp = json_response(conn, 200)
 
-      IO.inspect(resp)
+      assert Enum.count(resp["data"]["signatures"]) == 2
+      assert resp["data"]["content"] == %{"double" => "hello world"}
     end
 
     @tag :pending
