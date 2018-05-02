@@ -98,6 +98,16 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       assert mock_correct_response_data("test/fixtures/sign1.json") == resp["data"]
     end
 
+    test "processing double signed data works", %{conn: conn} do
+      data = get_data("test/fixtures/double_hello.json")
+      request = create_request(data)
+
+      conn = post(conn, digital_signatures_path(conn, :index), request)
+      resp = json_response(conn, 200)
+
+      IO.inspect(resp)
+    end
+
     @tag :pending
     test "processing valid encoded data 25 times in a row", %{conn: conn} do
       data = get_data("test/fixtures/sign1.json")
