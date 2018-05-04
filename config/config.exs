@@ -29,7 +29,8 @@ use Mix.Config
 # General application configuration
 config :digital_signature_api,
   ecto_repos: [DigitalSignature.Repo],
-  namespace: DigitalSignature
+  namespace: DigitalSignature,
+  certs_cache_ttl: {:system, :integer, "CERTS_CACHE_TTL", 30 * 60 * 1000}
 
 # Configures the endpoint
 config :digital_signature_api, DigitalSignature.Web.Endpoint,
@@ -45,13 +46,10 @@ config :logger, :console,
 
 config :phoenix, :format_encoders, json: Jason
 
-config :digital_signature_api, DigitalSignature.CertCache,
-  certs_cache_ttl: {:system, :integer, "CERTS_CACHE_TTL", 30 * 60 * 1000}
-
 # It is also possible to import configuration files, relative to this
 # directory. For example, you can emulate configuration per environment
 # by uncommenting the line below and defining dev.exs, test.exs and such.
 # Configuration from the imported file will override the ones defined
 # here (which is why it is important to import them last).
 #
-import_config "#{Mix.env()}.exs"
+import_config("#{Mix.env()}.exs")

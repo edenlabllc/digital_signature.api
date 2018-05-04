@@ -12,8 +12,8 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       insert_ucsku_certs()
       insert_privat_certs()
 
-      Supervisor.terminate_child(DigitalSignature.Supervisor, DigitalSignature.CertCache)
-      Supervisor.restart_child(DigitalSignature.Supervisor, DigitalSignature.CertCache)
+      Supervisor.terminate_child(DigitalSignature.Supervisor, DigitalSignature.NifService)
+      Supervisor.restart_child(DigitalSignature.Supervisor, DigitalSignature.NifService)
 
       {:ok, conn: put_req_header(conn, "accept", "application/json")}
     end
@@ -173,8 +173,8 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
     setup %{conn: conn} do
       Repo.delete_all(Cert)
 
-      Supervisor.terminate_child(DigitalSignature.Supervisor, DigitalSignature.CertCache)
-      Supervisor.restart_child(DigitalSignature.Supervisor, DigitalSignature.CertCache)
+      Supervisor.terminate_child(DigitalSignature.Supervisor, DigitalSignature.NifService)
+      Supervisor.restart_child(DigitalSignature.Supervisor, DigitalSignature.NifService)
 
       {:ok, conn: put_req_header(conn, "accept", "application/json")}
     end
