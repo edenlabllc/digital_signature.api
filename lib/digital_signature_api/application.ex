@@ -5,7 +5,6 @@ defmodule DigitalSignature do
   use Application
   alias DigitalSignature.Web.Endpoint
   alias Confex.Resolver
-  alias DigitalSignature.CertCache
 
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
   # for more information on OTP Applications
@@ -20,8 +19,7 @@ defmodule DigitalSignature do
       supervisor(DigitalSignature.Web.Endpoint, []),
       # Starts a worker by calling: DigitalSignature.Worker.start_link(arg1, arg2, arg3)
       # worker(DigitalSignature.Worker, [arg1, arg2, arg3]),
-      worker(DigitalSignature.CertCache, [CertCache.certs_ttl()]),
-      worker(DigitalSignature.NifService, [])
+      worker(DigitalSignature.NifService, [Confex.fetch_env!(:digital_signature_api, :certs_cache_ttl)])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
