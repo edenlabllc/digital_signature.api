@@ -108,11 +108,27 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       data = get_data("test/fixtures/double_hello.json")
       request = create_request(data)
 
-      conn = post(conn, digital_signatures_path(conn, :index), request)
-      resp = json_response(conn, 200)
+      resp =
+        conn
+        |> post(digital_signatures_path(conn, :index), request)
+        |> json_response(200)
 
       assert Enum.count(resp["data"]["signatures"]) == 2
       assert resp["data"]["content"] == %{"double" => "hello world"}
+    end
+
+    test "processing envelope with more than one signature returns correct error", %{conn: conn} do
+      data = get_data("test/fixtures/tripple_hello.json")
+      request = create_request(data)
+
+      resp =
+        conn
+        |> post(digital_signatures_path(conn, :index), request)
+        |> json_response(200)
+
+      [signature] = resp["data"]["signatures"]
+      refute signature["is_valid"]
+      assert signature["validation_error_message"] == "envelope contains 2 signatures instead of 1"
     end
 
     @tag :pending

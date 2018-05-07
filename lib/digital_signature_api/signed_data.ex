@@ -13,9 +13,15 @@ defmodule DigitalSignature.SignedData do
       when is_map(signer) and is_boolean(is_valid) and is_bitstring(validation_error_message) and is_binary(content) do
     signature = %{signer: signer, is_valid: is_valid, validation_error_message: validation_error_message}
 
-    %__MODULE__{signatures: [signature | signatures], content: content}
+    %__MODULE__{signatures: signatures ++ [signature], content: content}
   end
 
-  def get_map(%__MODULE__{signatures: signatures, content: content}),
-    do: %{signatures: Enum.reverse(signatures), content: content}
+  def add_sign_error(%__MODULE__{signatures: signatures, content: content}, error_message)
+      when is_bitstring(error_message) do
+    signature = %{signer: %{}, is_valid: false, validation_error_message: error_message}
+
+    %__MODULE__{signatures: signatures ++ [signature], content: content}
+  end
+
+  def get_map(%__MODULE__{} = signed_data), do: Map.from_struct(signed_data)
 end

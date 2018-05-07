@@ -21,7 +21,7 @@ defmodule DigitalSignature.NifService do
 
   defp do_process_signed_content(signed_content, certs, check, %SignedData{} = signed_data) do
     case DigitalSignatureLib.checkPKCS7Data(signed_content) do
-      {:ok, _} ->
+      {:ok, 1} ->
         with {:ok, processing_result} <- DigitalSignatureLib.processPKCS7Data(signed_content, certs, check) do
           do_process_signed_content(
             processing_result.content,
@@ -30,6 +30,10 @@ defmodule DigitalSignature.NifService do
             SignedData.update(signed_data, processing_result)
           )
         end
+
+      {:ok, n} ->
+        signed_data_error = SignedData.add_sign_error(signed_data, "envelope contains #{n} signatures instead of 1")
+        {:ok, SignedData.get_map(signed_data_error)}
 
       {:error, :signed_data_load} ->
         {:ok, SignedData.get_map(signed_data)}
