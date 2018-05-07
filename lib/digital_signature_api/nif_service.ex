@@ -60,6 +60,13 @@ defmodule DigitalSignature.NifService do
   end
 
   def process_signed_content(signed_content, check) do
-    GenServer.call(__MODULE__, {:process_signed_content, signed_content, check})
+    gen_server_timeout = Confex.fetch_env!(:digital_signature_api, :nif_service_timeout)
+
+    try do
+      GenServer.call(__MODULE__, {:process_signed_content, signed_content, check}, gen_server_timeout)
+    catch
+      :exit, {:timeout, error} ->
+        {:error, {:nif_service_timeot, error}}
+    end
   end
 end

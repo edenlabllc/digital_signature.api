@@ -1,7 +1,7 @@
 defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
   @moduledoc false
 
-  use DigitalSignature.Web.ConnCase
+  use DigitalSignature.Web.ConnCase, async: false
   alias DigitalSignature.Cert
   alias DigitalSignature.Repo
 
@@ -162,6 +162,28 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
         resp = Task.await(task)
         assert List.first(resp["data"]["signatures"])["is_valid"]
       end)
+    end
+
+    @tag :pending
+    test "test NIF gen_server timeout leads to correct response", %{conn: conn} do
+      data = get_data("test/fixtures/hello.json")
+      request = create_request(data)
+
+      System.put_env("NIF_SERVICE_TIMEOUT", "10")
+
+      Enum.map(1..10, fn _ ->
+        Task.async(fn ->
+          conn
+          |> post(digital_signatures_path(conn, :index), request)
+        end)
+      end)
+      |> Enum.each(fn task ->
+        task
+        |> Task.await()
+        |> json_response(424)
+      end)
+
+      System.delete_env("NIF_SERVICE_TIMEOUT")
     end
 
     test "processing invalid encoded data works", %{conn: conn} do

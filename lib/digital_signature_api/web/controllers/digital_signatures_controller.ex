@@ -20,15 +20,6 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
         Logger.error(inspect(error))
         {:error, error}
 
-      {:error, {:multiple_signatures, n}} ->
-        error = [
-          {%{description: "Envelop contains multiple signatures (#{n})", params: [], rule: :invalid},
-           "$.signed_content"}
-        ]
-
-        Logger.error(inspect(error))
-        {:error, error}
-
       {:error, errors} when is_list(errors) ->
         Enum.each(errors, &Logger.error(inspect(&1)))
         {:error, errors}
