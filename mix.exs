@@ -78,7 +78,8 @@ defmodule DigitalSignature.Mixfile do
       {:jvalid, "~> 0.6.0"},
       {:digital_signature_lib, git: "https://github.com/edenlabllc/digital_signature.lib.git"},
       {:credo, "~> 0.9.1", only: [:dev, :test]},
-      {:jason, "~> 1.0"}
+      {:jason, "~> 1.0"},
+      {:nex_json_schema, ">= 0.7.2"}
     ]
   end
 
