@@ -155,11 +155,14 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
         Task.async(fn ->
           conn
           |> post(digital_signatures_path(conn, :index), request)
-          |> json_response(200)
         end)
       end)
       |> Enum.each(fn task ->
-        resp = Task.await(task)
+        resp =
+          task
+          |> Task.await()
+          |> json_response(200)
+
         assert List.first(resp["data"]["signatures"])["is_valid"]
       end)
     end
