@@ -1,7 +1,7 @@
 defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
   @moduledoc false
 
-  use DigitalSignature.Web.ConnCase
+  use DigitalSignature.Web.ConnCase, async: false
   alias DigitalSignature.Cert
   alias DigitalSignature.Repo
 
@@ -88,59 +88,105 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       assert "Not a base64 string" == rule["description"]
     end
 
-    test "processing valid encoded data works", %{conn: conn} do
-      data = get_data("test/fixtures/sign1.json")
+    test "processing signed valid data works", %{conn: conn} do
+      data = get_data("test/fixtures/hello.json")
       request = create_request(data)
 
-      conn = post(conn, digital_signatures_path(conn, :index), request)
-      resp = json_response(conn, 200)
+      resp =
+        conn
+        |> post(digital_signatures_path(conn, :index), request)
+        |> json_response(200)
 
-      assert mock_correct_response_data("test/fixtures/sign1.json") == resp["data"]
+      [signature] = resp["data"]["signatures"]
+
+      assert signature["is_valid"]
+      assert "" == signature["validation_error_message"]
+      assert resp["data"]["content"] == %{"hello" => "world"}
+    end
+
+    test "processing double signed valid data works", %{conn: conn} do
+      data = get_data("test/fixtures/double_hello.json")
+      request = create_request(data)
+
+      resp =
+        conn
+        |> post(digital_signatures_path(conn, :index), request)
+        |> json_response(200)
+
+      assert Enum.count(resp["data"]["signatures"]) == 2
+      assert resp["data"]["content"] == %{"double" => "hello world"}
+    end
+
+    test "processing envelope with more than one signature returns correct error", %{conn: conn} do
+      data = get_data("test/fixtures/tripple_hello.json")
+      request = create_request(data)
+
+      resp =
+        conn
+        |> post(digital_signatures_path(conn, :index), request)
+        |> json_response(200)
+
+      [signature] = resp["data"]["signatures"]
+      refute signature["is_valid"]
+      assert signature["validation_error_message"] == "envelope contains 2 signatures instead of 1"
     end
 
     @tag :pending
     test "processing valid encoded data 25 times in a row", %{conn: conn} do
-      data = get_data("test/fixtures/sign1.json")
+      data = get_data("test/fixtures/hello.json")
       request = create_request(data)
-      expected_response = mock_correct_response_data("test/fixtures/sign1.json")
 
       Enum.each(1..25, fn _ ->
-        response =
+        resp =
           conn
           |> post(digital_signatures_path(conn, :index), request)
           |> json_response(200)
 
-        assert expected_response == response["data"]
+        assert List.first(resp["data"]["signatures"])["is_valid"]
       end)
     end
 
     @tag :pending
     test "processing valid encoded data 25 times in parallel", %{conn: conn} do
-      data = get_data("test/fixtures/sign1.json")
+      data = get_data("test/fixtures/hello.json")
       request = create_request(data)
-      expected_response = mock_correct_response_data("test/fixtures/sign1.json")
 
       Enum.map(1..25, fn _ ->
         Task.async(fn ->
           conn
           |> post(digital_signatures_path(conn, :index), request)
-          |> json_response(200)
         end)
       end)
       |> Enum.each(fn task ->
-        response = Task.await(task)
-        assert expected_response == response["data"]
+        resp =
+          task
+          |> Task.await()
+          |> json_response(200)
+
+        assert List.first(resp["data"]["signatures"])["is_valid"]
       end)
     end
 
-    test "processing valid encoded data works again", %{conn: conn} do
-      data = get_data("test/fixtures/sign2.json")
+    @tag :pending
+    test "test NIF gen_server timeout leads to correct response", %{conn: conn} do
+      data = get_data("test/fixtures/hello.json")
       request = create_request(data)
 
-      conn = post(conn, digital_signatures_path(conn, :index), request)
-      resp = json_response(conn, 200)
+      System.put_env("NIF_SERVICE_TIMEOUT", "10")
 
-      assert mock_correct_response_data("test/fixtures/sign2.json") == resp["data"]
+      Enum.map(1..10, fn _ ->
+        Task.async(fn ->
+          conn
+          |> post(digital_signatures_path(conn, :index), request)
+        end)
+      end)
+      |> Enum.each(fn task ->
+        task
+        |> Task.await()
+        |> json_response(424)
+      end)
+
+      System.delete_env("NIF_SERVICE_TIMEOUT")
     end
 
     test "processing invalid encoded data works", %{conn: conn} do
@@ -152,20 +198,22 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       conn = post(conn, digital_signatures_path(conn, :index), bad_request)
       resp = json_response(conn, 200)
 
-      data = resp["data"]
-
-      refute data["is_valid"]
-      assert data["validation_error_message"] == "error processing signed data"
+      assert [] == resp["data"]["signatures"]
+      assert "" == resp["data"]["content"]
     end
 
     test "processign valid signed declaration with outdated signature", %{conn: conn} do
       data = get_data("test/fixtures/outdated_cert.json")
-      conn = post(conn, digital_signatures_path(conn, :index), data)
 
-      resp = json_response(conn, 200)
+      resp =
+        conn
+        |> post(digital_signatures_path(conn, :index), data)
+        |> json_response(200)
 
-      refute resp["data"]["is_valid"]
-      assert resp["data"]["validation_error_message"] == "certificate timestamp expired"
+      [signature] = resp["data"]["signatures"]
+
+      refute signature["is_valid"]
+      assert signature["validation_error_message"] == "certificate timestamp expired"
     end
   end
 
@@ -180,14 +228,17 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
     end
 
     test "Can return correct error", %{conn: conn} do
-      data = get_data("test/fixtures/sign1.json")
-      conn = post(conn, digital_signatures_path(conn, :index), data)
+      data = get_data("test/fixtures/hello.json")
 
-      resp = json_response(conn, 200)
-      data = resp["data"]
+      resp =
+        conn
+        |> post(digital_signatures_path(conn, :index), data)
+        |> json_response(200)
 
-      refute data["is_valid"]
-      assert data["validation_error_message"] == "matching ROOT certificate not found"
+      [signature] = resp["data"]["signatures"]
+
+      refute signature["is_valid"]
+      assert signature["validation_error_message"] == "matching ROOT certificate not found"
     end
 
     test "Can process data signed with key where some info fieds are invalid and certificate is absent", %{conn: conn} do
@@ -196,15 +247,15 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
 
       resp = json_response(conn, 200)
 
-      data = resp["data"]
+      [signature] = resp["data"]["signatures"]
 
-      refute data["is_valid"]
-      assert data["validation_error_message"] == "matching ROOT certificate not found"
+      refute signature["is_valid"]
+      assert signature["validation_error_message"] == "matching ROOT certificate not found"
 
       # this field contains invalid (non UTF-8) data inside the signed package - so we are returing an empty string
-      assert data["signer"]["organization_name"] == ""
+      assert signature["signer"]["organization_name"] == ""
       # this field contains invalid (non UTF-8) data inside the signed package - so we are returing an empty string
-      assert data["signer"]["organizational_unit_name"] == ""
+      assert signature["signer"]["organizational_unit_name"] == ""
     end
   end
 
@@ -213,13 +264,6 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
     {:ok, json} = Jason.decode(file)
 
     Map.take(json["data"], ["signed_content", "signed_content_encoding"])
-  end
-
-  defp mock_correct_response_data(json_file) do
-    {:ok, file} = File.read(json_file)
-    {:ok, json} = Jason.decode(file)
-
-    Map.put(json["data"], "validation_error_message", "")
   end
 
   defp create_request(data) do

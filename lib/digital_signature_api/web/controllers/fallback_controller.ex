@@ -22,6 +22,12 @@ defmodule DigitalSignature.Web.FallbackController do
     |> render(EView.Views.Error, :"404")
   end
 
+  def call(conn, {:error, {:nif_service_timeot, _error}}) do
+    conn
+    |> put_status(424)
+    |> render(EView.Views.Error, :"424")
+  end
+
   def call(conn, nil) do
     conn
     |> put_status(:not_found)
