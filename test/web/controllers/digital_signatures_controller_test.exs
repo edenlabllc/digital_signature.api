@@ -104,6 +104,28 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       assert resp["data"]["content"] == %{"hello" => "world"}
     end
 
+    test "processing signed valid data works (uakey)", %{conn: conn} do
+      data = get_data("test/fixtures/uakey.json")
+      request = create_request(data)
+
+      resp =
+        conn
+        |> post(digital_signatures_path(conn, :index), request)
+        |> json_response(200)
+
+      [signature] = resp["data"]["signatures"]
+
+      assert signature["is_valid"]
+      assert "" == signature["validation_error_message"]
+
+      assert resp["data"]["content"] == %{
+               "name" => "patient",
+               "route" => %{"first" => "Kiev", "second" => "Odessa"},
+               "sex" => "male",
+               "url" => %{"/api" => %{"target" => "http://api-dev.example.org/"}}
+             }
+    end
+
     test "processing double signed valid data works", %{conn: conn} do
       data = get_data("test/fixtures/double_hello.json")
       request = create_request(data)
