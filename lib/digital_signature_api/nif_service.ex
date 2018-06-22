@@ -66,7 +66,7 @@ defmodule DigitalSignature.NifService do
       GenServer.call(__MODULE__, {:process_signed_content, signed_content, check}, gen_server_timeout)
     catch
       :exit, {:timeout, error} ->
-        {:error, {:nif_service_timeot, error}}
+        {:error, {:nif_service_timeout, error}}
     end
   end
 end
