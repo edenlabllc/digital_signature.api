@@ -198,8 +198,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
 
       Enum.map(1..10, fn _ ->
         Task.async(fn ->
-          conn
-          |> post(digital_signatures_path(conn, :index), request)
+          post(conn, digital_signatures_path(conn, :index), request)
         end)
       end)
       |> Enum.each(fn task ->
@@ -212,16 +211,15 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
     end
 
     @tag :pending
-    test "test NIF gen_server response threshold tiemout leads to correct response", %{conn: conn} do
+    test "test NIF gen_server messages timestamp works", %{conn: conn} do
       data = get_data("test/fixtures/hello.json")
       request = create_request(data)
 
-      System.put_env("NIF_SERVICE_RESPONSE_THRESHOLD", "4950")
+      System.put_env("NIF_SERVICE_CALL_TIMEOUT", "110")
 
-      Enum.map(1..10, fn _ ->
+      Enum.map(1..100, fn _ ->
         Task.async(fn ->
-          conn
-          |> post(digital_signatures_path(conn, :index), request)
+          post(conn, digital_signatures_path(conn, :index), request)
         end)
       end)
       |> Enum.each(fn task ->
@@ -230,7 +228,11 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
         |> json_response(424)
       end)
 
-      System.delete_env("NIF_SERVICE_RESPONSE_THRESHOLD")
+      System.delete_env("NIF_SERVICE_CALL_TIMEOUT")
+
+      conn
+      |> post(digital_signatures_path(conn, :index), request)
+      |> json_response(200)
     end
 
     test "processing invalid encoded data works", %{conn: conn} do

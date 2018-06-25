@@ -5,6 +5,8 @@ defmodule DigitalSignature.NifService do
   alias DigitalSignature.Cert.API, as: CertAPI
   require Logger
 
+  @call_response_threshold 100
+
   # Callbacks
   def init(certs_cache_ttl) do
     certs = CertAPI.get_certs_map()
@@ -14,10 +16,8 @@ defmodule DigitalSignature.NifService do
   end
 
   def handle_call({:process_signed_content, signed_content, check, message_exp_time}, _from, {certs_cache_ttl, certs}) do
-    threshold = Confex.fetch_env!(:digital_signature_api, :nif_service_response_threshold)
-
     processing_result =
-      if NaiveDateTime.diff(message_exp_time, NaiveDateTime.utc_now(), :millisecond) >= threshold do
+      if NaiveDateTime.compare(message_exp_time, NaiveDateTime.utc_now()) == :gt do
         check = unless is_boolean(check), do: true
         do_process_signed_content(signed_content, certs, check, SignedData.new())
       else
@@ -70,7 +70,9 @@ defmodule DigitalSignature.NifService do
 
   def process_signed_content(signed_content, check) do
     gen_server_timeout = Confex.fetch_env!(:digital_signature_api, :nif_service_call_timeout)
-    message_exp_time = NaiveDateTime.add(NaiveDateTime.utc_now(), gen_server_timeout, :millisecond)
+
+    message_exp_time =
+      NaiveDateTime.add(NaiveDateTime.utc_now(), gen_server_timeout - @call_response_threshold, :millisecond)
 
     try do
       GenServer.call(__MODULE__, {:process_signed_content, signed_content, check, message_exp_time}, gen_server_timeout)

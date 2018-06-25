@@ -31,8 +31,7 @@ config :digital_signature_api,
   ecto_repos: [DigitalSignature.Repo],
   namespace: DigitalSignature,
   certs_cache_ttl: {:system, :integer, "CERTS_CACHE_TTL", 30 * 60 * 1000},
-  nif_service_call_timeout: {:system, :integer, "NIF_SERVICE_CALL_TIMEOUT", 4000},
-  nif_service_response_threshold: {:system, :integer, "NIF_SERVICE_RESPONSE_THRESHOLD", 250}
+  nif_service_call_timeout: {:system, :integer, "NIF_SERVICE_CALL_TIMEOUT", 4000}
 
 # Configures the endpoint
 config :digital_signature_api, DigitalSignature.Web.Endpoint,
