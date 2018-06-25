@@ -3,6 +3,9 @@ defmodule DigitalSignature.NifService do
   use GenServer
   alias DigitalSignature.SignedData
   alias DigitalSignature.Cert.API, as: CertAPI
+  require Logger
+
+  @call_response_threshold 100
 
   # Callbacks
   def init(certs_cache_ttl) do
@@ -12,10 +15,16 @@ defmodule DigitalSignature.NifService do
     {:ok, {certs_cache_ttl, certs}}
   end
 
-  def handle_call({:process_signed_content, signed_content, check}, _from, {certs_cache_ttl, certs}) do
-    check = unless is_boolean(check), do: true
+  def handle_call({:process_signed_content, signed_content, check, message_exp_time}, _from, {certs_cache_ttl, certs}) do
+    processing_result =
+      if NaiveDateTime.compare(message_exp_time, NaiveDateTime.utc_now()) == :gt do
+        check = unless is_boolean(check), do: true
+        do_process_signed_content(signed_content, certs, check, SignedData.new())
+      else
+        Logger.info("NifService message queue timeout")
+        {:error, {:nif_service_timeout, "messaqe queue timeout"}}
+      end
 
-    processing_result = do_process_signed_content(signed_content, certs, check, SignedData.new())
     {:reply, processing_result, {certs_cache_ttl, certs}}
   end
 
@@ -60,13 +69,17 @@ defmodule DigitalSignature.NifService do
   end
 
   def process_signed_content(signed_content, check) do
-    gen_server_timeout = Confex.fetch_env!(:digital_signature_api, :nif_service_timeout)
+    gen_server_timeout = Confex.fetch_env!(:digital_signature_api, :nif_service_call_timeout)
+
+    message_exp_time =
+      NaiveDateTime.add(NaiveDateTime.utc_now(), gen_server_timeout - @call_response_threshold, :millisecond)
 
     try do
-      GenServer.call(__MODULE__, {:process_signed_content, signed_content, check}, gen_server_timeout)
+      GenServer.call(__MODULE__, {:process_signed_content, signed_content, check, message_exp_time}, gen_server_timeout)
     catch
       :exit, {:timeout, error} ->
-        {:error, {:nif_service_timeot, error}}
+        Logger.info("NifService call timeout")
+        {:error, {:nif_service_timeout, error}}
     end
   end
 end
