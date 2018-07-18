@@ -1,12 +1,17 @@
-language: bash
-
-sudo: true
-
+language: elixir
+git:
+  depth: 1000
+services:
+  - postgresql
 addons:
+  postgresql: "9.6"
   apt:
     packages:
       - docker-ce
-
+elixir:
+  - 1.6.6
+otp_release:
+  - 20.3.8
 notifications:
   slack:
     rooms:
@@ -15,11 +20,10 @@ notifications:
 
 env:
   global:
-    - DOCKER_NET=ds_test_db
-    - Chart=digital-signature
-    - DOCKER_HUB_ACCOUNT=edenlabllc
-    - MAIN_BRANCHES="master develop preprod" # Branches on which you want version to be incremented
-    - RELEASE_BRANCH="develop"
+    - APPS='{"digital_signature_api":"digital-signature"}'
+    - DOCKER_NAMESPACE=edenlabllc
+    - NO_ECTO_SETUP=true
+    - POSTGRES_VERSION=9.6
     # Docker and GitHub credentials
     - secure: "uceBiEXXOVuv0GVSjdC0G4yMoC/d4rOVW9B+CdKNIoTy7yB8wLxBoeLzuVFonX2BHXcBCkH07H+oMgrTpIJSj5r2TS/MrbCdphWeeuQ7LsEWKtUZsWl6Q0cdRtls67mlIjGYU+IVK4YcCOyUdcZemtj789poTx+YMyYypxEVLmITkjlqTdi7nGjETJ5weXyIYB5PsVONGJSfCOiZ0ebm9itQypUAoMXu3XGGZKgA0TKTQ4A7q1c8bbpEU1UNg8fm5p4IogJgecx9rY18tj1v9bQJ4n6sHke+cePcLk8zEsMZhvuTbeJPZYJdxTdJm/myZQirs9De5PM5Qu/i64sOefocXcUYu/53s4n1z6VN/UH2SpfZLuBO57NN3fkCwO1TB5BDDdVwZn1/oCzFO/LhWPZLn5/Of0vnv406lhofxpCSpDpHxFc6M9JICSaOO15t6PP63GSkYcNcmw6ylyBeC+7piSOAkRPiVfeTbUGjRxOP7EC61VO6lPlQr8DIjcb0kLpxpyP+IZCtNg0e/yrlqEIrvONRUqqEoXu5fo2zbOuXBC9eXVklrK/gReU2pkitsLKqfvjACG/BRD5MZX4M3ZhVHbYbG5Wat9GqkHWkg1OT9Z6yBTAtvQm5QspNmm1uSeu965B5xUnaL1OMMW3qvw3ZwX0MLetumHnLqmB7rFg="
     - secure: "fdUsRknGQEgs60zdTzspZgHAAAW6qc/UoLi6eML2YaRVdbg8B0mJB6o4tpLz+54OicreT7XoIg8KNID1NgjTDRERKrQqsB1Ph02fOJR4iURkkSr8kPwqmeWsTMmcylf2GT6XXcls7RkeIx2KSi1YbgjEPqfZMihVacT+z+dVyvOVBykNwb0W+40rTSLXTKq/XOI6Wr1OeADT6utgTRYah/RtaEJv5isyjrSyP5m7okPCa0D83XjptAIWgAlkpgbHoLlvyl6UVRvcP43AXva9tFp4Wf+/Ne1X6lCrX4gOuLF0fLVQX72w3B9QNlM+IxWpl6otkN4gI2FtZzz/O0XGgA1JCmbDhjGRL59NfNMhjnXaMzfVZp5PYwijhjMVRQZs8qCC5cw+3s8GoSVAkUy8WiU9n6koGE12mDbbOtThzp8hyjZ980fowKVXUGMdC2N6qhMOCxL5FIztVK2Cf4DZxloXQgd91Z/MpVP+SmuC6fscpDOW6DU8p6OPzHUEMAOy0hMi3G8G6HwBhuCcyU6Os9aYNXd/IrVrpMvMT5O2X1Uf5SL71SOJfaXjRB/DW7ZQptXiFYLb26e9dtIGgv5eBHz+FG34QSuzFkTYKPScD+DiansTXBy6T69/lWw11ts1aiq/mhG2w2lXHmf2E22KbzbAL8qDXr2m5qsuAdVizsE="
@@ -29,29 +33,24 @@ branches:
   except:
     - /[0-9]*\.[0-9]*\.[0-9]*/
 
-before_script:
-  - sudo docker network create $DOCKER_NET
-  - POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres docker run -d --name ds_test_db --net $DOCKER_NET postgres:9.6
-  - IMAGE=$(docker build -f Dockerfile.test . | tail -1 | awk '{ print $NF }')
-  - CONTAINER=$(docker run -d --net $DOCKER_NET $IMAGE /bin/bash -c 'cd /home/digital_signature.api; mix test --exclude pending --trace')
+before_install:
+  - sudo apt-get install jq
+  - curl -s https://raw.githubusercontent.com/edenlabllc/ci-utils/umbrella/init-db.sh -o init-db.sh; sudo sh ./init-db.sh
 
-script:
-  # Check test container output
-  - sudo docker attach $CONTAINER || travis_terminate 1
-  - sudo docker wait $CONTAINER || travis_terminate 1
-  # Increment version in mix.exs
-  - ./bin/ci/version-increment.sh || travis_terminate 1
-  # Build Docker container
-  - ./bin/build.sh || travis_terminate 1
-  # Run Docker container
-  - sudo ./bin/start.sh || travis_terminate 1
-  # Deliver and Deploy Docker container
-  - ./bin/ci/push.sh || travis_terminate 1
-  - openssl aes-256-cbc -K $encrypted_134bca1e162b_key -iv $encrypted_134bca1e162b_iv -in eHealth-8110bd102a69.json.enc -out eHealth-8110bd102a69.json -d
-  - sudo ./bin/deploy.sh || travis_terminate 1
-
-after_script:
-  - sudo docker stop ds_test_db
-  - sudo docker rm ds_test_db
-  - sudo docker rm $CONTAINER
-  - sudo docker network rm $DOCKER_NET
+jobs:
+  include:
+    - stage: "test and build"
+      # run tests
+      script:
+      - IMAGE=$(docker build -f Dockerfile.test . | tail -1 | awk '{ print $NF }')
+      - HOST_IP=`ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' | head -n 1`
+      - CONTAINER=$(docker run --add-host=travis:$HOST_IP -d $IMAGE /bin/bash -c 'cd /home/digital_signature.api; DB_HOST=travis mix test --exclude pending --trace')
+      - sudo docker attach $CONTAINER || travis_terminate 1
+      - sudo docker wait $CONTAINER || travis_terminate 1
+      - sudo docker rm $CONTAINER
+    - stage: "test and build"
+      # "Decrypting deploy key..."
+      script:
+      - psql -c 'create database digital_signature_api_test;' -U postgres
+      - openssl aes-256-cbc -K $encrypted_134bca1e162b_key -iv $encrypted_134bca1e162b_iv -in eHealth-8110bd102a69.json.enc -out eHealth-8110bd102a69.json -d
+      - (curl -s https://raw.githubusercontent.com/edenlabllc/ci-utils/umbrella/docker.sh -o docker.sh; bash ./docker.sh) || travis_terminate 1
