@@ -10,6 +10,7 @@ ENV TZ=Europe/Kiev
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 ENV MIX_ENV=test
+ENV REPLACE_OS_VARS=true
 
 RUN mix do \
     local.hex --force, \
