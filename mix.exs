@@ -72,10 +72,10 @@ defmodule DigitalSignature.Mixfile do
       {:eview, "~> 0.12.0"},
       {:plug_logger_json, "~> 0.5"},
       {:ecto_logger_json, "~> 0.1"},
-      {:excoveralls, ">= 0.5.0", only: [:dev, :test]},
+      {:excoveralls, "~> 0.8.1", only: [:dev, :test]},
       {:jvalid, "~> 0.6.0"},
       {:digital_signature_lib, git: "https://github.com/edenlabllc/digital_signature.lib.git"},
-      {:credo, "~> 0.9.1", only: [:dev, :test]},
+      {:credo, "~> 0.9.3", only: [:dev, :test]},
       {:jason, "~> 1.0"},
       {:nex_json_schema, ">= 0.7.2"}
     ]
