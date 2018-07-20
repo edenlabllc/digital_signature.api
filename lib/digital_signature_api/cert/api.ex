@@ -2,8 +2,8 @@ defmodule DigitalSignature.Cert.API do
   @moduledoc false
 
   import Ecto.{Query, Changeset}, warn: false
-  alias DigitalSignature.Repo
   alias DigitalSignature.Cert
+  alias DigitalSignature.Repo
 
   def get_certs_map do
     query =

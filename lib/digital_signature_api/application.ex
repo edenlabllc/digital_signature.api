@@ -3,8 +3,8 @@ defmodule DigitalSignature do
   This is an entry point of digital_signature application.
   """
   use Application
-  alias DigitalSignature.Web.Endpoint
   alias Confex.Resolver
+  alias DigitalSignature.Web.Endpoint
 
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
   # for more information on OTP Applications
