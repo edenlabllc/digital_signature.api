@@ -66,7 +66,7 @@ defmodule DigitalSignature.Mixfile do
       {:confex, "~> 3.3"},
       {:ecto, "~> 2.2"},
       {:cowboy, "~> 1.1"},
-      {:httpoison, "~> 0.13.0"},
+      {:httpoison, "~> 1.1.0"},
       {:postgrex, ">= 0.0.0"},
       {:phoenix, "~> 1.3"},
       {:eview, "~> 0.12.0"},

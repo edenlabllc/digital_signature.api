@@ -31,7 +31,7 @@ defmodule DigitalSignature.NifService do
   defp do_process_signed_content(signed_content, certs, check, %SignedData{} = signed_data) do
     case DigitalSignatureLib.checkPKCS7Data(signed_content) do
       {:ok, 1} ->
-        with {:ok, processing_result} <- DigitalSignatureLib.processPKCS7Data(signed_content, certs, check) do
+        with {:ok, processing_result} <- retrive_signed_content(signed_content, certs, check) do
           do_process_signed_content(
             processing_result.content,
             certs,
@@ -47,6 +47,42 @@ defmodule DigitalSignature.NifService do
       {:error, :signed_data_load} ->
         {:ok, SignedData.get_map(signed_data)}
     end
+  end
+
+  defp retrive_signed_content(signed_content, certs, check, timeout \\ 1000) do
+    with {:ok, data, ocsp_checklist} <- DigitalSignatureLib.retrivePKCS7Data(signed_content, certs, check),
+         {:ocsp, true, data} <-
+           {:ocsp,
+            Enum.all?(ocsp_checklist, fn oscp_info = %{access: access, data: data} ->
+              with {:ok, %HTTPoison.Response{status_code: 200}} <-
+                     HTTPoison.post(
+                       access,
+                       data,
+                       [{"Content-Type", "application/ocsp-request"}],
+                       timeout: timeout
+                     ) do
+                true
+              else
+                {:error, %HTTPoison.Error{reason: reason}} when reason in ~w(timeout connect_timeout)a ->
+                  crl_sertificate_valid?(oscp_info)
+
+                _ ->
+                  false
+              end
+            end), data} do
+      {:ok, data}
+    else
+      {:ocsp, false, data} ->
+        {:ok, %{data | is_valid: false, validation_error_message: "OCSP certificate verificaton failed"}}
+
+      error ->
+        error
+    end
+  end
+
+  def crl_sertificate_valid?(oscp_info) do
+    # TODO: check in .crl and delta .crl files downloaded from provider
+    false
   end
 
   def handle_info(:refresh, {certs_cache_ttl, _certs}) do
