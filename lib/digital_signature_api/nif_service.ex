@@ -54,6 +54,7 @@ defmodule DigitalSignature.NifService do
          {:ocsp, true, data} <-
            {:ocsp,
             Enum.all?(ocsp_checklist, fn oscp_info = %{access: access, data: data} ->
+              # |> IO.inspect()
               with {:ok, %HTTPoison.Response{status_code: 200}} <-
                      HTTPoison.post(
                        access,
