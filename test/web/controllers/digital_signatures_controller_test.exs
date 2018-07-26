@@ -170,6 +170,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
 
     @tag :pending
     test "processing valid encoded data 25 times in parallel", %{conn: conn} do
+      IO.inspect(Confex.fetch_env!(:digital_signature_api, :nif_service_call_timeout))
       data = get_data("test/fixtures/hello.json")
       request = create_request(data)
 
@@ -226,9 +227,9 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
         %Plug.Conn{status: code} =
           task
           |> Task.await()
-      end)
 
-      assert code in [200, 424]
+        assert code in [200, 424]
+      end)
 
       System.delete_env("NIF_SERVICE_CALL_TIMEOUT")
 
