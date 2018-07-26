@@ -80,7 +80,7 @@ defmodule DigitalSignature.NifService do
     end
   end
 
-  def crl_sertificate_valid?(oscp_info) do
+  def crl_sertificate_valid?(_oscp_info) do
     # TODO: check in .crl and delta .crl files downloaded from provider
     false
   end
