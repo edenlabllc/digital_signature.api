@@ -31,7 +31,7 @@ defmodule DigitalSignature.NifService do
   defp do_process_signed_content(signed_content, certs, check, %SignedData{} = signed_data) do
     case DigitalSignatureLib.checkPKCS7Data(signed_content) do
       {:ok, 1} ->
-        with {:ok, processing_result, _} <- DigitalSignatureLib.retrivePKCS7Data(signed_content, certs, check) do
+        with {:ok, processing_result} <- retrive_signed_content(signed_content, certs, check) do
           do_process_signed_content(
             processing_result.content,
             certs,
@@ -54,7 +54,6 @@ defmodule DigitalSignature.NifService do
          {:ocsp, true, data} <-
            {:ocsp,
             Enum.all?(ocsp_checklist, fn oscp_info = %{access: access, data: data} ->
-              # |> IO.inspect()
               with {:ok, %HTTPoison.Response{status_code: 200}} <-
                      HTTPoison.post(
                        access,
