@@ -8,12 +8,14 @@ openssl crl -inform DER -in ~/Downloads/CA-4E6929B9-Delta.crl -outform PEM -out 
 {ok, Pem} = file:read_file("/Users/edenlab/Downloads/CA-4E6929B9-Delta.pem").
 [Priv] = public_key:pem_decode(Pem)
 
-Data = <<48,112,48,110,48,108,48,106,48,104,48,12,6,10,42,134,36,2,1,1,1,1,2,1,
-         4,32,48,90,53,226,72,32,103,138,63,104,121,169,87,52,201,140,101,76,
-         49,32,3,21,221,13,141,52,30,220,146,140,226,135,4,32,141,132,237,161,
-         187,147,129,232,195,17,144,168,172,146,133,63,196,216,199,132,198,74,
-         1,184,55,17,87,216,93,24,85,87,2,20,13,132,237,161,187,147,129,232,4,
-         0,0,0,173,191,34,0,69,207,113,0>>.
+.%{
+  access: "http://uakey.com.ua/services/ocsp/",
+  crl: "http://uakey.com.ua/list.crl",
+  data: <<48, 112, 48, 110, 48, 108, 48, 106, 48, 104, 48, 12, 6, 10, 42, 134,
+    36, 2, 1, 1, 1, 1, 2, 1, 4, 32, 65, 156, 207, 24, 31, 29, 247, 175, 200, 54,
+    69, 65, 112, 119, 92, 207, 184, 74, 179, 167, 104, ...>>,
+  delta_crl: "http://uakey.com.ua/list-delta.crl"
+}
 
 {ok, Bytes} = file:read_file("/Users/edenlab/Downloads/CA-4E6929B9-Delta.crl").
 public_key:der_decode('CertificateList', Bytes). 

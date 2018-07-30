@@ -53,17 +53,11 @@ defmodule DigitalSignature.NifService do
     with {:ok, data, ocsp_checklist} <- DigitalSignatureLib.retrivePKCS7Data(signed_content, certs, check),
          {:ocsp, true, data} <-
            {:ocsp,
-            Enum.all?(ocsp_checklist, fn oscp_info = %{access: access, data: data} ->
-              with {:ok, %HTTPoison.Response{status_code: 200}} <-
-                     HTTPoison.post(
-                       access,
-                       data,
-                       [{"Content-Type", "application/ocsp-request"}],
-                       timeout: timeout
-                     ) do
+            Enum.all?(ocsp_checklist, fn oscp_info ->
+              with {:ok, true} <- ocsp_response(oscp_info, timeout) do
                 true
               else
-                {:error, %HTTPoison.Error{reason: reason}} when reason in ~w(timeout connect_timeout)a ->
+                {:ok, :timeout} ->
                   crl_sertificate_valid?(oscp_info)
 
                 _ ->
@@ -77,6 +71,24 @@ defmodule DigitalSignature.NifService do
 
       error ->
         error
+    end
+  end
+
+  def ocsp_response(%{access: access, data: data}, timeout) do
+    case HTTPoison.post(
+           access,
+           data,
+           [{"Content-Type", "application/ocsp-request"}],
+           timeout: timeout
+         ) do
+      {:ok, %HTTPoison.Response{status_code: 200}} ->
+        {:ok, true}
+
+      {:error, %HTTPoison.Error{reason: reason}} when reason in ~w(timeout connect_timeout)a ->
+        {:ok, :timeout}
+
+      _ ->
+        {:error, :invalid}
     end
   end
 
