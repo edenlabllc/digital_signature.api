@@ -54,6 +54,8 @@ defmodule DigitalSignature.NifService do
          {:ocsp, true, data} <-
            {:ocsp,
             Enum.all?(ocsp_checklist, fn oscp_info ->
+              IO.inspect(oscp_info)
+
               with {:ok, true} <- ocsp_response(oscp_info, timeout) do
                 true
               else
