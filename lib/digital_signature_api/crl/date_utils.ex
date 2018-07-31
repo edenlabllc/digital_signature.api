@@ -21,7 +21,10 @@ defmodule DigitalSignature.DateUtils do
                      # XXI century, works only for 2001-2099
                      {{"20" <> year, month, day}, {hour, minute, second}}
                    ) do
-              ecto_datetime |> Ecto.DateTime.to_erl() |> NaiveDateTime.from_erl!() |> DateTime.from_naive!("Etc/UTC")
+              dt =
+                ecto_datetime |> Ecto.DateTime.to_erl() |> NaiveDateTime.from_erl!() |> DateTime.from_naive!("Etc/UTC")
+
+              {:ok, dt}
             else
               _ -> :error
             end

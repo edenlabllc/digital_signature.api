@@ -44,7 +44,7 @@ defmodule DigitalSignature.CrlService do
   end
 
   def start_link() do
-    started = GenServer.start_link(__MODULE__, %{}, name: __MODULE__) |> IO.inspect()
+    started = GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
     Enum.each(CrlApi.list_urls(), fn %Crl{url: url} -> send(__MODULE__, {:update, url}) end)
     started
   end
