@@ -36,12 +36,12 @@ defmodule DigitalSignature.CrlApi do
     |> where([r], r.url == ^url)
     |> Repo.delete_all()
 
-    NewRevokedSNs =
+    revokedSNs =
       Enum.reduce(serialNumbers, [], fn number, revoked_sns ->
-        [sn_changeset(%RevokedSN{}, %{url: url, serial_number: Integer.to_string(number)}) | revoked_sns]
+        [%{url: url, serial_number: Integer.to_string(number)} | revoked_sns]
       end)
 
-    Repo.insert_all(RevokedSN, NewRevokedSNs, [])
+    Repo.insert_all(RevokedSN, revokedSNs, [])
   end
 
   def update_serials(url, nextUpdate, serialNumbers) do
@@ -58,10 +58,5 @@ defmodule DigitalSignature.CrlApi do
     crl
     |> cast(attrs, [:url, :next_update])
     |> unique_constraint(:url, name: "crl_url_index")
-  end
-
-  def sn_changeset(%RevokedSN{} = sn, attrs) do
-    sn
-    |> cast(attrs, [:url, :serial_number])
   end
 end

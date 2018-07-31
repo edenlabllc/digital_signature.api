@@ -44,7 +44,10 @@ defmodule DigitalSignature.CrlService do
   end
 
   def start_link() do
-    GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
+    started = GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
+
+    Enum.reduce(CrlApi.list_urls(), fn %Crl{url: url} -> send(__MODULE__, {:update, url}) end)
+    started
   end
 
   def clean_timer(url, state) do
@@ -62,9 +65,8 @@ defmodule DigitalSignature.CrlService do
 
   def parse_crl(data) do
     with {:CertificateList, {:TBSCertList, _, _, _, _, {:utcTime, nextUpdateTs}, revokedCertificates, _}, _, _} <-
-           :public_key.der_decode(:CertificateList, data) do
-      nextUpdate = convert_date(nextUpdateTs)
-
+           :public_key.der_decode(:CertificateList, data),
+         {:ok, nextUpdate} <- convert_date(nextUpdateTs) do
       revokedSerialNumbers =
         Enum.reduce(revokedCertificates, [], fn {:TBSCertList_revokedCertificates_SEQOF, userCertificate, _, _},
                                                 serialNumbers ->
@@ -83,7 +85,7 @@ defmodule DigitalSignature.CrlService do
     else
       error ->
         IO.inspect(error)
-        Logger.error(fn -> :io_lib.fomat("~nError update crl ~s :: ~p~n", [error]) end)
+        Logger.error(fn -> :io_lib.format("~nError update crl ~s :: ~p~n", [error]) end)
         {:error, url}
     end
   end

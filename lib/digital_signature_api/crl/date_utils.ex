@@ -1,8 +1,6 @@
 defmodule DigitalSignature.DateUtils do
   @moduledoc false
 
-  alias Ecto.DateTime
-
   defmacro __using__(_) do
     quote do
       def convert_date(date) do
@@ -18,10 +16,15 @@ defmodule DigitalSignature.DateUtils do
             "second" => second,
             "year" => year
           } = utc_date ->
-            DateTime.cast(
-              # XXI century, works only for 2001-2099
-              {{"20" <> year, month, day}, {hour, minute, second}}
-            )
+            with {:ok, ecto_datetime} <-
+                   Ecto.DateTime.cast(
+                     # XXI century, works only for 2001-2099
+                     {{"20" <> year, month, day}, {hour, minute, second}}
+                   ) do
+              ecto_datetime |> Ecto.DateTime.to_erl() |> NaiveDateTime.from_erl!() |> DateTime.from_naive!("Etc/UTC")
+            else
+              _ -> :error
+            end
 
           nil ->
             :error
