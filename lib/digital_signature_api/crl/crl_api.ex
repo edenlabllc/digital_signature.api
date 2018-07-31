@@ -22,7 +22,7 @@ defmodule DigitalSignature.CrlApi do
     Repo.get_by(Crl, url: url)
   end
 
-  def insert_crl(%{url: url, data: data} = attrs) do
+  def insert_crl(%{url: _url, data: _data} = attrs) do
     %Crl{}
     |> crl_changeset(attrs)
     |> Repo.insert()
