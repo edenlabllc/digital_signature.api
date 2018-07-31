@@ -38,7 +38,7 @@ defmodule DigitalSignature.CrlApi do
 
     NewRevokedSNs =
       Enum.reduce(serialNumbers, [], fn number, revoked_sns ->
-        [sn_changeset(%RevokedSN{}, %{url: url, serial_number: number}) | revoked_sns]
+        [sn_changeset(%RevokedSN{}, %{url: url, serial_number: Integer.to_string(number)}) | revoked_sns]
       end)
 
     Repo.insert_all(RevokedSN, NewRevokedSNs, [])
@@ -61,7 +61,7 @@ defmodule DigitalSignature.CrlApi do
   end
 
   def sn_changeset(%RevokedSN{} = sn, attrs) do
-    crl
+    sn
     |> cast(attrs, [:url, :serial_number])
   end
 end
