@@ -3,40 +3,65 @@ defmodule DigitalSignature.CrlApi do
   import Ecto.{Query, Changeset}, warn: false
   alias DigitalSignature.Crl
   alias DigitalSignature.Repo
+  alias DigitalSignature.RevokedSN
 
-  def insert_or_update(url, data) do
-    case get_crl_by_url(url) do
-      nil ->
-        insert_crl(%{url: url, data: data})
-
-      %Crl{} = crl ->
-        update_crl(crl, %{url: url, data: data})
-    end
-  end
-
-  def list do
+  def list_urls do
     Repo.all(Crl)
   end
 
-  def get_crl_by_url(url) do
+  def get_serial(url, serialNumber) do
+    Repo.get_by(RevokedSN, url: url, serial_number: Integer.to_string(serialNumber))
+  end
+
+  def get_url(url) do
     Repo.get_by(Crl, url: url)
   end
 
-  def insert_crl(%{url: _url, data: _data} = attrs) do
-    %Crl{}
-    |> crl_changeset(attrs)
-    |> Repo.insert()
+  def write_url(url, nextUpdate) do
+    case get_url(url) do
+      nil ->
+        %Crl{}
+        |> crl_changeset(%{url: url, next_update: nextUpdate})
+        |> Repo.insert()
+
+      %Crl{} = crl ->
+        crl
+        |> crl_changeset(%{url: url, next_update: nextUpdate})
+        |> Repo.update()
+    end
   end
 
-  def update_crl(crl, %{url: _url, data: _data} = attrs) do
-    crl
-    |> crl_changeset(attrs)
-    |> Repo.update()
+  def write_serials(url, serialNumbers) do
+    RevokedSN
+    |> where([r], r.url == ^url)
+    |> Repo.delete_all()
+
+    NewRevokedSNs =
+      Enum.reduce(serialNumbers, [], fn number, revoked_sns ->
+        [sn_changeset(%RevokedSN{}, %{url: url, serial_number: number}) | revoked_sns]
+      end)
+
+    Repo.insert_all(RevokedSN, NewRevokedSNs, [])
   end
 
-  def crl_changeset(%Crl{} = crl, %{url: _url, data: _data} = attrs) do
+  def update_serials(url, nextUpdate, serialNumbers) do
+    Repo.transaction(
+      fn ->
+        write_url(url, nextUpdate)
+        write_serials(url, serialNumbers)
+      end,
+      []
+    )
+  end
+
+  def crl_changeset(%Crl{} = crl, attrs) do
     crl
-    |> cast(attrs, [:url, :data])
+    |> cast(attrs, [:url, :next_update])
     |> unique_constraint(:url, name: "crl_url_index")
+  end
+
+  def sn_changeset(%RevokedSN{} = sn, attrs) do
+    crl
+    |> cast(attrs, [:url, :serial_number])
   end
 end
