@@ -61,7 +61,7 @@ defmodule DigitalSignature.CrlService do
   end
 
   def parse_crl(data) do
-    with {:CertificateList, {:TBSCertList, _, _, _, _, nextUpdateTs, revokedCertificates, _}, _, _} <-
+    with {:CertificateList, {:TBSCertList, _, _, _, _, {:utcTime, nextUpdateTs}, revokedCertificates, _}, _, _} <-
            :public_key.der_decode(:CertificateList, data) do
       nextUpdate = convert_date(nextUpdateTs)
 
