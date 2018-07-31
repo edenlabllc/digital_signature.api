@@ -8,13 +8,32 @@ openssl crl -inform DER -in ~/Downloads/CA-4E6929B9-Delta.crl -outform PEM -out 
 {ok, Pem} = file:read_file("/Users/edenlab/Downloads/CA-4E6929B9-Delta.pem").
 [Priv] = public_key:pem_decode(Pem)
 
-.%{
-  access: "http://uakey.com.ua/services/ocsp/",
-  crl: "http://uakey.com.ua/list.crl",
+%{
+  access: "http://acsk.privatbank.ua/services/ocsp/",
+  crl: "http://acsk.privatbank.ua/crl/PB-S9.crl",
   data: <<48, 112, 48, 110, 48, 108, 48, 106, 48, 104, 48, 12, 6, 10, 42, 134,
-    36, 2, 1, 1, 1, 1, 2, 1, 4, 32, 65, 156, 207, 24, 31, 29, 247, 175, 200, 54,
-    69, 65, 112, 119, 92, 207, 184, 74, 179, 167, 104, ...>>,
-  delta_crl: "http://uakey.com.ua/list-delta.crl"
+    36, 2, 1, 1, 1, 1, 2, 1, 4, 32, 48, 90, 53, 226, 72, 32, 103, 138, 63, 104,
+    121, 169, 87, 52, 201, 140, 101, 76, 49, 32, 3, ...>>,
+  delta_crl: "http://acsk.privatbank.ua/crldelta/PB-Delta-S9.crl",
+  serial_number: "0d84eda1bb9381e804000000adbf220045cf7100"
+}
+...%{
+  access: "http://acskidd.gov.ua/services/ocsp/",
+  crl: "http://acskidd.gov.ua/download/crls/CA-20B4E4ED-Full.crl",
+  data: <<48, 112, 48, 110, 48, 108, 48, 106, 48, 104, 48, 12, 6, 10, 42, 134,
+    36, 2, 1, 1, 1, 1, 2, 1, 4, 32, 199, 183, 200, 180, 217, 243, 182, 146, 34,
+    241, 248, 213, 110, 224, 19, 198, 140, 101, 67, 29, 29, ...>>,
+  delta_crl: "http://acskidd.gov.ua/download/crls/CA-20B4E4ED-Delta.crl",
+  serial_number: "20b4e4ed0d30998c040000006e121e0069736000"
+}
+%{
+  access: "http://acskidd.gov.ua/services/ocsp/",
+  crl: "http://acskidd.gov.ua/download/crls/CA-20B4E4ED-Full.crl",
+  data: <<48, 112, 48, 110, 48, 108, 48, 106, 48, 104, 48, 12, 6, 10, 42, 134,
+    36, 2, 1, 1, 1, 1, 2, 1, 4, 32, 199, 183, 200, 180, 217, 243, 182, 146, 34,
+    241, 248, 213, 110, 224, 19, 198, 140, 101, 67, 29, 29, ...>>,
+  delta_crl: "http://acskidd.gov.ua/download/crls/CA-20B4E4ED-Delta.crl",
+  serial_number: "20b4e4ed0d30998c040000006e121e0069736000"
 }
 
 {ok, Bytes} = file:read_file("/Users/edenlab/Downloads/CA-4E6929B9-Delta.crl").
