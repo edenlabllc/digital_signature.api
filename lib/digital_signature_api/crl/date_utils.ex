@@ -1,10 +1,10 @@
 defmodule DigitalSignature.DateUtils do
   @moduledoc false
 
+  alias Ecto.DateTime
+
   defmacro __using__(_) do
     quote do
-      alias Ecto.DateTime
-
       def convert_date(date) do
         case Regex.named_captures(
                ~r/(?<year>\d{2})(?<month>\d{2})(?<day>\d{2})(?<hour>\d{2})(?<minute>\d{2})(?<second>\d{2})Z/,

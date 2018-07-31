@@ -16,13 +16,26 @@ defmodule DigitalSignature.CrlService do
   end
 
   @impl true
+  def handle_info({:check, url}, state) do
+    case state do
+      %{^url => _} ->
+        :ok
+
+      _ ->
+        send(__MODULE__, {:update, url})
+    end
+
+    {:noreply, state}
+  end
+
+  @impl true
   def handle_info({:update, url}, state) do
     clean_timer(url, state)
 
     newState =
       with {:ok, nextUpdate} <- update_crl(url) do
         tref = Process.send_after(__MODULE__, {:update, url}, next_update_time(nextUpdate))
-        newState = Map.put(state, url, tref)
+        Map.put(state, url, tref)
       else
         _ -> state
       end
@@ -48,12 +61,12 @@ defmodule DigitalSignature.CrlService do
   end
 
   def parse_crl(data) do
-    with {CertificateList, {TBSCertList, _, _, _, _, nextUpdateTs, revokedCertificates, _}, _, _} <-
+    with {:CertificateList, {:TBSCertList, _, _, _, _, nextUpdateTs, revokedCertificates, _}, _, _} <-
            :public_key.der_decode(:CertificateList, data) do
       nextUpdate = convert_date(nextUpdateTs)
 
       revokedSerialNumbers =
-        Enum.reduce(revokedCertificates, [], fn {TBSCertList_revokedCertificates_SEQOF, userCertificate, _, _},
+        Enum.reduce(revokedCertificates, [], fn {:TBSCertList_revokedCertificates_SEQOF, userCertificate, _, _},
                                                 serialNumbers ->
           [userCertificate | serialNumbers]
         end)
@@ -69,7 +82,8 @@ defmodule DigitalSignature.CrlService do
       {:ok, nextUpdate}
     else
       error ->
-        Logger.error("Error update crl #{url} in state :: #{error}")
+        IO.inspect(error)
+        Logger.error(fn -> :io_lib.fomat("~nError update crl ~s :: ~p~n", [error]) end)
         {:error, url}
     end
   end
