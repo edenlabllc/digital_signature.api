@@ -50,12 +50,11 @@ defmodule DigitalSignature.NifService do
     end
   end
 
-  defp retrive_signed_content(signed_content, certs, check, timeout \\ 0) do
+  defp retrive_signed_content(signed_content, certs, check, timeout \\ 1000) do
     with {:ok, data, ocsp_checklist} <- DigitalSignatureLib.retrivePKCS7Data(signed_content, certs, check),
          {:ocsp, true, data} <-
            {:ocsp,
             Enum.all?(ocsp_checklist, fn oscp_info ->
-              IO.inspect(oscp_info)
               collect_crls(oscp_info)
 
               with {:ok, true} <- ocsp_response(oscp_info, timeout) do
@@ -102,7 +101,7 @@ defmodule DigitalSignature.NifService do
   end
 
   def crl_sertificate_valid?(%{delta_crl: deltaCrl, serial_number: serialNumber, crl: crl}) do
-    CrlService.revoked?(crl, serialNumber) and CrlService.revoked?(deltaCrl, serialNumber)
+    not (CrlService.revoked?(crl, serialNumber) and CrlService.revoked?(deltaCrl, serialNumber))
   end
 
   def handle_info(:refresh, {certs_cache_ttl, _certs}) do
