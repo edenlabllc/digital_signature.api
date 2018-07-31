@@ -28,13 +28,13 @@ defmodule DigitalSignature.CrlApi do
     |> Repo.insert()
   end
 
-  def update_crl(crl, %{url: url, data: data} = attrs) do
+  def update_crl(crl, %{url: _url, data: _data} = attrs) do
     crl
     |> crl_changeset(attrs)
     |> Repo.update()
   end
 
-  def crl_changeset(%Crl{} = crl, %{url: url, data: data} = attrs) do
+  def crl_changeset(%Crl{} = crl, %{url: _url, data: _data} = attrs) do
     crl
     |> cast(attrs, [:url, :data])
     |> unique_constraint(:url, name: "crl_url_index")
