@@ -1,6 +1,7 @@
 defmodule DigitalSignature.CrlService do
   @moduledoc false
   use GenServer
+  use DigitalSignature.DateUtils
   require Logger
 
   alias DigitalSignature.Crl
@@ -30,17 +31,16 @@ defmodule DigitalSignature.CrlService do
   end
 
   def update_state(%Crl{url: url, data: data} = crl, state) do
-    with {CertificateList, {TBSCertList, _, _, _, thisUpdate, nexUpdate, revokedCertificates, _}, _, _} <-
+    with {CertificateList, {TBSCertList, _, _, _, _, nextUpdateTs, revokedCertificates, _}, _, _} <-
            :public_key.der_decode(:CertificateList, data) do
+      nextUpdate = convert_date(nextUpdateTs)
+
       revokedSerialNumbers =
         Enum.reduce(revokedCertificates, %{}, fn {TBSCertList_revokedCertificates_SEQOF, userCertificate, _, _}, acc ->
-          # Maps wokrs much more faster that list, so for map with a lot of keys,
-          # key will be found much more faster (x 10-100 times)
-          # than for list with a same number of elements
           Map.put(acc, userCertificate, nil)
         end)
 
-      Map.put(state, url, revokedSerialNumbers)
+      Map.put(state, url, {nextUpdate, revokedSerialNumbers})
     else
       error ->
         Logger.error("Error processig CRL: #{url} :: #{error}")
@@ -58,21 +58,24 @@ defmodule DigitalSignature.CrlService do
 
   # API
   def revoked?(url, serialNumber) do
-    case get_revoked_status(url) do
-      %{^url => %{^serialNumber => _}} ->
-        true
+    serialNumber = serialNumber |> String.upcase() |> Base.decode16!() |> :binary.decode_unsigned()
 
+    with {nextUpdate, revokedList} <- get_revoked_status(url),
+         :gt <- DateTime.compare(nextUpdate, DateTime.utc_now()) do
+      case revokedList do
+        %{^url => %{^serialNumber => _}} ->
+          true
+
+        %{^url => _} ->
+          false
+      end
+    else
       nil ->
-        # TODO: download crl from url
-
         Logger.error("CRL file not found for #{url}")
         true
 
-      %{^url => _} ->
-        false
-
       error ->
-        Logger.error("Unknown error get revoked status for #{url}:#{serialNumber} :: #{error}")
+        Logger.error("Error get revoked status for #{url}:#{serialNumber} :: #{error}")
         true
     end
   end
