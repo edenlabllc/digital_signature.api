@@ -1,6 +1,7 @@
 defmodule DigitalSignature.NifService do
   @moduledoc false
   use GenServer
+  alias DigitalSignature.CrlService
   alias DigitalSignature.SignedData
   alias DigitalSignature.Cert.API, as: CertAPI
   require Logger
@@ -94,9 +95,8 @@ defmodule DigitalSignature.NifService do
     end
   end
 
-  def crl_sertificate_valid?(_oscp_info) do
-    # TODO: check in .crl and delta .crl files downloaded from provider
-    false
+  def crl_sertificate_valid?(%{delta_crl: deltaCrl, serial_number: serialNumber, crl: crl}) do
+    CrlService.revoked?(crl, serialNumber) and CrlService.revoked?(deltaCrl, serialNumber)
   end
 
   def handle_info(:refresh, {certs_cache_ttl, _certs}) do

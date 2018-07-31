@@ -9,6 +9,8 @@ defmodule DigitalSignature.Repo.Migrations.AddCrlTable do
 
       timestamps()
     end
+
+    unique_index(:crl, [:url])
   end
 
   def down do

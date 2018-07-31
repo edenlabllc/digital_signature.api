@@ -14,15 +14,3 @@ defmodule DigitalSignature.Cert do
     timestamps()
   end
 end
-
-defmodule DigitalSignature.Crl do
-  use Ecto.Schema
-
-  @primary_key {:id, :binary_id, autogenerate: true}
-  schema "crl" do
-    field(:url, :string)
-    field(:data, :binary)
-
-    timestamps()
-  end
-end

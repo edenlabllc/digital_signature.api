@@ -5,14 +5,13 @@ defmodule DigitalSignature.CrlService do
   require Logger
 
   alias DigitalSignature.Crl
-  alias DigitalSignature.Repo
+  alias DigitalSignature.CrlApi
 
   # Callbacks
 
   @impl true
   def init([]) do
-    state = Enum.reduce(get_existing_crls(), %{}, fn crl, acc -> update_state(crl, acc) end)
-
+    state = Enum.reduce(CrlApi.list(), %{}, fn crl, acc -> update_state(crl, acc) end)
     {:ok, state}
   end
 
@@ -22,8 +21,8 @@ defmodule DigitalSignature.CrlService do
   end
 
   @impl true
-  def handle_info({:reload, :crl}, state) do
-    {:noreply, state}
+  def handle_cast({:reload, crl}, state) do
+    {:noreply, update_state(crl, state)}
   end
 
   def start_link() do
@@ -48,8 +47,14 @@ defmodule DigitalSignature.CrlService do
     end
   end
 
-  def get_existing_crls do
-    Repo.all(Crl)
+  def update_crl(url) do
+    with {:ok, %HTTPoison.Response{status_code: 200, body: data}} <- HTTPoison.get(url),
+         {:ok, crl} <- CrlApi.insert_or_update(url, data) do
+      GenServer.cast(__MODULE__, {:reload, crl})
+    else
+      error ->
+        Logger.error("Error update crl #{url} in state :: #{error}")
+    end
   end
 
   def get_revoked_status(url, timeout \\ 1000) do
@@ -58,7 +63,11 @@ defmodule DigitalSignature.CrlService do
 
   # API
   def revoked?(url, serialNumber) do
-    serialNumber = serialNumber |> String.upcase() |> Base.decode16!() |> :binary.decode_unsigned()
+    serialNumber =
+      serialNumber
+      |> String.upcase()
+      |> Base.decode16!()
+      |> :binary.decode_unsigned()
 
     with {nextUpdate, revokedList} <- get_revoked_status(url),
          :gt <- DateTime.compare(nextUpdate, DateTime.utc_now()) do
@@ -70,8 +79,8 @@ defmodule DigitalSignature.CrlService do
           false
       end
     else
-      nil ->
-        Logger.error("CRL file not found for #{url}")
+      error when error in ~w(nil lt eq)a ->
+        update_crl(url)
         true
 
       error ->
