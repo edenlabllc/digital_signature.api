@@ -44,9 +44,8 @@ defmodule DigitalSignature.CrlService do
   end
 
   def start_link() do
-    started = GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
-
-    Enum.reduce(CrlApi.list_urls(), fn %Crl{url: url}, _ -> send(__MODULE__, {:update, url}) end)
+    started = GenServer.start_link(__MODULE__, %{}, name: __MODULE__) |> IO.inspect()
+    Enum.each(CrlApi.list_urls(), fn %Crl{url: url} -> send(__MODULE__, {:update, url}) end)
     started
   end
 
@@ -85,7 +84,7 @@ defmodule DigitalSignature.CrlService do
     else
       error ->
         IO.inspect(error)
-        Logger.error(fn -> :io_lib.format("~nError update crl ~s :: ~p~n", [error]) end)
+        Logger.error(fn -> :io_lib.format("~nError update crl ~s :: ~p~n", [url, error]) end)
         {:error, url}
     end
   end
