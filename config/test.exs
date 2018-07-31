@@ -23,4 +23,5 @@ config :digital_signature_api, DigitalSignature.Repo,
   database: "digital_signature_api_test",
   hostname: System.get_env("DB_HOST"),
   pool: Ecto.Adapters.SQL.Sandbox,
+  pool_size: 150,
   ownership_timeout: 120_000_000
