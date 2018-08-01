@@ -18,16 +18,15 @@ defmodule DigitalSignature.NifService do
   end
 
   def handle_call(
-        {:process_signed_content, signed_content, signed_data, check, message_exp_time},
+        {:process_signed_content, signed_content, signed_data, check, expires_at},
         _from,
         {certs_cache_ttl, certs}
       ) do
     processing_result =
-      if NaiveDateTime.compare(message_exp_time, NaiveDateTime.utc_now()) == :gt do
+      if NaiveDateTime.compare(expires_at, NaiveDateTime.utc_now()) == :gt do
         check = unless is_boolean(check), do: true
         nif_process_signed_content(signed_content, signed_data, certs, check)
       else
-        IO.inspect({message_exp_time, NaiveDateTime.utc_now()})
         Logger.info("NifService message queue timeout")
         {:error, {:nif_service_timeout, "messaqe queue timeout"}}
       end
@@ -54,7 +53,7 @@ defmodule DigitalSignature.NifService do
       send(CrlService, {:check, deltaCrl})
       send(CrlService, {:check, crl})
 
-      with {:ok, true} <- @nif_service.ocsp_response(cert_info, timeout) do
+      with {:ok, true} <- ocsp_response(cert_info, timeout) do
         true
       else
         {:ok, :timeout} ->
@@ -104,32 +103,29 @@ defmodule DigitalSignature.NifService do
   end
 
   def process_signed_content(signed_content, check) do
-    retrive_signed_data(signed_content, SignedData.new(), check)
+    timeout = Confex.fetch_env!(:digital_signature_api, :nif_service_call_timeout)
+    ocs_timeout = Confex.fetch_env!(:digital_signature_api, :ocs_timeout)
+
+    expires_at = NaiveDateTime.add(NaiveDateTime.utc_now(), timeout - @call_response_threshold, :millisecond)
+    params = %{check: check, expires_at: expires_at, ocs_timeout: ocs_timeout, timeout: timeout}
+
+    retrive_signed_data(signed_content, SignedData.new(), params)
   end
 
-  defp retrive_signed_data(signed_content, signed_data, check) do
-    gen_server_timeout = Confex.fetch_env!(:digital_signature_api, :nif_service_call_timeout)
-
-    message_exp_time =
-      NaiveDateTime.add(NaiveDateTime.utc_now(), gen_server_timeout - @call_response_threshold, :millisecond)
-
-    ocsp_call_timeout = Confex.fetch_env!(:digital_signature_api, :ocsp_call_timeout)
+  defp retrive_signed_data(signed_content, signed_data, params) do
+    %{check: check, expires_at: expires_at, ocs_timeout: ocs_timeout, timeout: timeout} = params
 
     try do
       nif_responce =
-        GenServer.call(
-          __MODULE__,
-          {:process_signed_content, signed_content, signed_data, check, message_exp_time},
-          gen_server_timeout
-        )
+        GenServer.call(__MODULE__, {:process_signed_content, signed_content, signed_data, check, expires_at}, timeout)
 
       case nif_responce do
         {:ok, data} ->
           {:ok, SignedData.get_map(data)}
 
         {:ok, data, certificates_info} ->
-          if provider_cert?(certificates_info, ocsp_call_timeout) do
-            retrive_signed_data(data.content, SignedData.update(signed_data, data), check)
+          if provider_cert?(certificates_info, ocs_timeout) do
+            retrive_signed_data(data.content, SignedData.update(signed_data, data), params)
           else
             data =
               data
@@ -142,6 +138,9 @@ defmodule DigitalSignature.NifService do
         {:error, {:n, n}} ->
           signed_data_error = SignedData.add_sign_error(signed_data, "envelope contains #{n} signatures instead of 1")
           {:ok, SignedData.get_map(signed_data_error)}
+
+        error ->
+          error
       end
     catch
       :exit, {:timeout, error} ->
