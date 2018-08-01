@@ -77,6 +77,8 @@ defmodule DigitalSignature.Mixfile do
       {:digital_signature_lib, git: "https://github.com/edenlabllc/digital_signature.lib.git", branch: "oscp-req#300"},
       {:credo, "~> 0.9.3", only: [:dev, :test]},
       {:jason, "~> 1.0"},
+      {:ex_machina, "~> 2.0", only: [:dev, :test]},
+      {:mox, "~> 0.3", only: :test},
       {:nex_json_schema, ">= 0.7.2"}
     ]
   end

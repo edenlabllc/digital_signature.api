@@ -8,6 +8,7 @@ openssl crl -inform DER -in ~/Downloads/CA-4E6929B9-Delta.crl -outform PEM -out 
 {ok, Pem} = file:read_file("/Users/edenlab/Downloads/CA-4E6929B9-Delta.pem").
 [Priv] = public_key:pem_decode(Pem)
 
+Revoked? 0d84eda1bb9381e804000000adbf2200abdd7000
 %{
   access: "http://acsk.privatbank.ua/services/ocsp/",
   crl: "http://acsk.privatbank.ua/crl/PB-S9.crl",

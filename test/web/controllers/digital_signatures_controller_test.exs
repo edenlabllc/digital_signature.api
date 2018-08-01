@@ -1,6 +1,7 @@
 defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
   @moduledoc false
 
+  import Mox
   use DigitalSignature.Web.ConnCase, async: false
   alias DigitalSignature.Cert
   alias DigitalSignature.Repo
@@ -89,6 +90,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
     end
 
     test "processing signed valid data works", %{conn: conn} do
+      expect(NifServiceMock, :ocsp_response, fn _, _ -> {:ok, true} end)
       data = get_data("test/fixtures/hello.json")
       request = create_request(data)
 
@@ -104,7 +106,18 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       assert resp["data"]["content"] == %{"hello" => "world"}
     end
 
+    # test "processing signed with invalid Privat personal key", %{conn: _conn} do
+    #   data = File.read!("test/fixtures/hello_invalid.txt.sig")
+    #
+    #   assert {:ok, _, ocsp_checklist} =
+    #            DigitalSignatureLib.retrivePKCS7Data(data, DigitalSignature.Cert.API.get_certs_map(), true)
+    #
+    #   Enum.each(ocsp_checklist, fn info -> DigitalSignature.NifService.crl_sertificate_valid?(info) |> IO.inspect() end)
+    # end
+
     test "processing signed valid data works (uakey)", %{conn: conn} do
+      expect(NifServiceMock, :ocsp_response, fn _, _ -> {:ok, true} end)
+
       data = get_data("test/fixtures/uakey.json")
       request = create_request(data)
 
@@ -127,6 +140,8 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
     end
 
     test "processing double signed valid data works", %{conn: conn} do
+      expect(NifServiceMock, :ocsp_response, fn _, _ -> {:ok, true} end)
+
       data = get_data("test/fixtures/double_hello.json")
       request = create_request(data)
 
@@ -159,6 +174,8 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       request = create_request(data)
 
       Enum.each(1..25, fn _ ->
+        expect(NifServiceMock, :ocsp_response, fn _, _ -> {:ok, true} end)
+
         resp =
           conn
           |> post(digital_signatures_path(conn, :index), request)
@@ -175,6 +192,8 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
 
       Enum.map(1..25, fn _ ->
         Task.async(fn ->
+          expect(NifServiceMock, :ocsp_response, fn _, _ -> {:ok, true} end)
+
           conn
           |> post(digital_signatures_path(conn, :index), request)
         end)

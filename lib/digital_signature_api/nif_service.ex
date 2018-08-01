@@ -7,6 +7,7 @@ defmodule DigitalSignature.NifService do
   require Logger
 
   @call_response_threshold 100
+  @nif_service Application.get_env(:digital_signature_api, :api_resolvers)[:nif_service]
 
   # Callbacks
   def init(certs_cache_ttl) do
@@ -16,12 +17,17 @@ defmodule DigitalSignature.NifService do
     {:ok, {certs_cache_ttl, certs}}
   end
 
-  def handle_call({:process_signed_content, signed_content, check, message_exp_time}, _from, {certs_cache_ttl, certs}) do
+  def handle_call(
+        {:process_signed_content, signed_content, signed_data, check, message_exp_time},
+        _from,
+        {certs_cache_ttl, certs}
+      ) do
     processing_result =
       if NaiveDateTime.compare(message_exp_time, NaiveDateTime.utc_now()) == :gt do
         check = unless is_boolean(check), do: true
-        do_process_signed_content(signed_content, certs, check, SignedData.new())
+        nif_process_signed_content(signed_content, signed_data, certs, check)
       else
+        IO.inspect({message_exp_time, NaiveDateTime.utc_now()})
         Logger.info("NifService message queue timeout")
         {:error, {:nif_service_timeout, "messaqe queue timeout"}}
       end
@@ -29,57 +35,35 @@ defmodule DigitalSignature.NifService do
     {:reply, processing_result, {certs_cache_ttl, certs}}
   end
 
-  defp do_process_signed_content(signed_content, certs, check, %SignedData{} = signed_data) do
+  defp nif_process_signed_content(signed_content, signed_data, certs, check) do
     case DigitalSignatureLib.checkPKCS7Data(signed_content) do
       {:ok, 1} ->
-        with {:ok, processing_result} <- retrive_signed_content(signed_content, certs, check) do
-          do_process_signed_content(
-            processing_result.content,
-            certs,
-            check,
-            SignedData.update(signed_data, processing_result)
-          )
-        end
+        DigitalSignatureLib.retrivePKCS7Data(signed_content, certs, check)
 
       {:ok, n} ->
-        signed_data_error = SignedData.add_sign_error(signed_data, "envelope contains #{n} signatures instead of 1")
-        {:ok, SignedData.get_map(signed_data_error)}
+        {:error, {:n, n}}
 
       {:error, :signed_data_load} ->
-        {:ok, SignedData.get_map(signed_data)}
+        {:ok, signed_data}
     end
   end
 
-  defp retrive_signed_content(signed_content, certs, check, timeout \\ 1000) do
-    with {:ok, data, ocsp_checklist} <- DigitalSignatureLib.retrivePKCS7Data(signed_content, certs, check),
-         {:ocsp, true, data} <-
-           {:ocsp,
-            Enum.all?(ocsp_checklist, fn oscp_info ->
-              collect_crls(oscp_info)
+  def provider_cert?(certificates_info, timeout) do
+    Enum.all?(certificates_info, fn cert_info ->
+      %{delta_crl: deltaCrl, serial_number: serialNumber, crl: crl} = cert_info
+      send(CrlService, {:check, deltaCrl})
+      send(CrlService, {:check, crl})
 
-              with {:ok, true} <- ocsp_response(oscp_info, timeout) do
-                true
-              else
-                {:ok, :timeout} ->
-                  crl_sertificate_valid?(oscp_info)
+      with {:ok, true} <- @nif_service.ocsp_response(cert_info, timeout) do
+        true
+      else
+        {:ok, :timeout} ->
+          not (CrlService.revoked?(crl, serialNumber) and CrlService.revoked?(deltaCrl, serialNumber))
 
-                _ ->
-                  false
-              end
-            end), data} do
-      {:ok, data}
-    else
-      {:ocsp, false, data} ->
-        {:ok, %{data | is_valid: false, validation_error_message: "OCSP certificate verificaton failed"}}
-
-      error ->
-        error
-    end
-  end
-
-  def collect_crls(%{delta_crl: delta_crl, crl: crl}) do
-    send(CrlService, {:check, delta_crl})
-    send(CrlService, {:check, crl})
+        _ ->
+          false
+      end
+    end)
   end
 
   def ocsp_response(%{access: access, data: data}, timeout) do
@@ -92,16 +76,12 @@ defmodule DigitalSignature.NifService do
       {:ok, %HTTPoison.Response{status_code: 200}} ->
         {:ok, true}
 
-      {:error, %HTTPoison.Error{reason: reason}} when reason in ~w(timeout connect_timeout)a ->
+      {:error, %HTTPoison.Error{reason: :connect_timeout}} ->
         {:ok, :timeout}
 
       _ ->
         {:error, :invalid}
     end
-  end
-
-  def crl_sertificate_valid?(%{delta_crl: deltaCrl, serial_number: serialNumber, crl: crl}) do
-    not (CrlService.revoked?(crl, serialNumber) and CrlService.revoked?(deltaCrl, serialNumber))
   end
 
   def handle_info(:refresh, {certs_cache_ttl, _certs}) do
@@ -124,13 +104,45 @@ defmodule DigitalSignature.NifService do
   end
 
   def process_signed_content(signed_content, check) do
+    retrive_signed_data(signed_content, SignedData.new(), check)
+  end
+
+  defp retrive_signed_data(signed_content, signed_data, check) do
     gen_server_timeout = Confex.fetch_env!(:digital_signature_api, :nif_service_call_timeout)
 
     message_exp_time =
       NaiveDateTime.add(NaiveDateTime.utc_now(), gen_server_timeout - @call_response_threshold, :millisecond)
 
+    ocsp_call_timeout = Confex.fetch_env!(:digital_signature_api, :ocsp_call_timeout)
+
     try do
-      GenServer.call(__MODULE__, {:process_signed_content, signed_content, check, message_exp_time}, gen_server_timeout)
+      nif_responce =
+        GenServer.call(
+          __MODULE__,
+          {:process_signed_content, signed_content, signed_data, check, message_exp_time},
+          gen_server_timeout
+        )
+
+      case nif_responce do
+        {:ok, data} ->
+          {:ok, SignedData.get_map(data)}
+
+        {:ok, data, certificates_info} ->
+          if provider_cert?(certificates_info, ocsp_call_timeout) do
+            retrive_signed_data(data.content, SignedData.update(signed_data, data), check)
+          else
+            data =
+              data
+              |> Map.put(:is_valid, false)
+              |> Map.put(:validation_error_message, "OCSP certificate verificaton failed")
+
+            {:ok, SignedData.update(signed_data, data)}
+          end
+
+        {:error, {:n, n}} ->
+          signed_data_error = SignedData.add_sign_error(signed_data, "envelope contains #{n} signatures instead of 1")
+          {:ok, SignedData.get_map(signed_data_error)}
+      end
     catch
       :exit, {:timeout, error} ->
         Logger.info("NifService call timeout")

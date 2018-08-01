@@ -1,5 +1,8 @@
 use Mix.Config
 
+# General application configuration
+config :digital_signature_api, api_resolvers: [nif_service: NifServiceMock]
+
 # Configuration for test environment
 config :ex_unit, capture_log: true
 
@@ -23,5 +26,4 @@ config :digital_signature_api, DigitalSignature.Repo,
   database: "digital_signature_api_test",
   hostname: System.get_env("DB_HOST"),
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 90,
   ownership_timeout: 120_000_000
