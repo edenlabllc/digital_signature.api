@@ -113,7 +113,10 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
         conn
         |> post(digital_signatures_path(conn, :index), request)
         |> json_response(200)
-        |> IO.inspect()
+
+      [signature] = resp["data"]["signatures"]
+      refute signature["is_valid"]
+      assert "OCSP certificate verificaton failed" == signature["validation_error_message"]
     end
 
     test "processing signed valid data works (uakey)", %{conn: conn} do

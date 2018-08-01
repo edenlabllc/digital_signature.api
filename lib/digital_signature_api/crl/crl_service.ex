@@ -32,13 +32,12 @@ defmodule DigitalSignature.CrlService do
   def update_url_state(url, state) do
     clean_timer(url, state)
 
-    newState =
-      with {:ok, nextUpdate} <- update_crl(url) do
-        tref = Process.send_after(__MODULE__, {:update, url}, next_update_time(nextUpdate))
-        Map.put(state, url, tref)
-      else
-        _ -> state
-      end
+    with {:ok, nextUpdate} <- update_crl(url) do
+      tref = Process.send_after(__MODULE__, {:update, url}, next_update_time(nextUpdate))
+      Map.put(state, url, tref)
+    else
+      _ -> state
+    end
   end
 
   def start_link() do

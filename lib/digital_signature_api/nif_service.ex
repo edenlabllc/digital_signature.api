@@ -53,13 +53,13 @@ defmodule DigitalSignature.NifService do
     Enum.all?(certificates_info, fn cert_info ->
       %{delta_crl: deltaCrl, serial_number: serialNumber, crl: crl} = cert_info
 
-      with {:ok, true} <- CrlService.revoked(crl, serialNumber),
-           {:ok, true} <- CrlService.revoked(deltaCrl, serialNumber),
+      with {:ok, false} <- CrlService.revoked(crl, serialNumber),
+           {:ok, false} <- CrlService.revoked(deltaCrl, serialNumber),
            {:ok, revoked?} <- ocsp_response(cert_info, timeout) do
         revoked?
       else
-        {:ok, false} ->
-          true
+        {:ok, true} ->
+          false
       end
     end)
   end
@@ -72,6 +72,9 @@ defmodule DigitalSignature.NifService do
            timeout: timeout
          ) do
       {:ok, %HTTPoison.Response{status_code: 200, body: _body}} ->
+        # TODO: asn.1 decode
+        # {ok, {_, _, {_,T, R}}} = 'OCSP':decode('OCSPResponse', Data)
+        # 'OCSP':decode('OCSPResponse', R)
         {:ok, true}
 
       {:error, %HTTPoison.Error{reason: :connect_timeout}} ->
@@ -131,7 +134,7 @@ defmodule DigitalSignature.NifService do
               |> Map.put(:is_valid, false)
               |> Map.put(:validation_error_message, "OCSP certificate verificaton failed")
 
-            {:ok, SignedData.update(signed_data, data)}
+            {:ok, SignedData.get_map(SignedData.update(signed_data, data))}
           end
 
         {:error, {:n, n}} ->
