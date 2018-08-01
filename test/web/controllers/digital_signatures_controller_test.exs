@@ -105,14 +105,16 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       assert resp["data"]["content"] == %{"hello" => "world"}
     end
 
-    # test "processing signed with invalid Privat personal key", %{conn: _conn} do
-    #   data = File.read!("test/fixtures/hello_invalid.txt.sig")
-    #
-    #   assert {:ok, _, ocsp_checklist} =
-    #            DigitalSignatureLib.retrivePKCS7Data(data, DigitalSignature.Cert.API.get_certs_map(), true)
-    #
-    #   Enum.each(ocsp_checklist, fn info -> DigitalSignature.NifService.crl_sertificate_valid?(info) |> IO.inspect() end)
-    # end
+    test "processing signed with revoked Privat personal key", %{conn: conn} do
+      data = get_data("test/fixtures/hello_revoked.json")
+      request = create_request(data)
+
+      resp =
+        conn
+        |> post(digital_signatures_path(conn, :index), request)
+        |> json_response(200)
+        |> IO.inspect()
+    end
 
     test "processing signed valid data works (uakey)", %{conn: conn} do
       data = get_data("test/fixtures/uakey.json")

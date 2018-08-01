@@ -16,20 +16,20 @@ defmodule DigitalSignature.CrlService do
   end
 
   @impl true
-  def handle_info({:check, url}, state) do
-    case state do
-      %{^url => _} ->
-        :ok
+  def handle_info({:update, url}, state) do
+    newState = update_url_state(url, state)
 
-      _ ->
-        send(__MODULE__, {:update, url})
-    end
-
-    {:noreply, state}
+    {:noreply, newState}
   end
 
   @impl true
-  def handle_info({:update, url}, state) do
+  def handle_call({:update, url}, _from, state) do
+    newState = update_url_state(url, state)
+
+    {:reply, Map.has_key?(newState, url), newState}
+  end
+
+  def update_url_state(url, state) do
     clean_timer(url, state)
 
     newState =
@@ -39,8 +39,6 @@ defmodule DigitalSignature.CrlService do
       else
         _ -> state
       end
-
-    {:noreply, newState}
   end
 
   def start_link() do
@@ -50,8 +48,10 @@ defmodule DigitalSignature.CrlService do
   end
 
   def clean_timer(url, state) do
-    with %{^url => tref} <- state do
-      Process.cancel_timer(tref)
+    case state do
+      %{^url => nil} -> :ok
+      %{^url => tref} -> Process.cancel_timer(tref)
+      _ -> :ok
     end
   end
 
@@ -89,32 +89,49 @@ defmodule DigitalSignature.CrlService do
     end
   end
 
+  def check_revoked?(url, serialNumber) do
+    case CrlApi.get_url(url) do
+      %Crl{next_update: nextUpdate} ->
+        case DateTime.compare(nextUpdate, DateTime.utc_now()) do
+          :gt ->
+            case CrlApi.get_serial(url, serialNumber) do
+              nil -> {:ok, false}
+              %RevokedSN{} -> {:ok, true}
+            end
+
+          _ ->
+            {:error, :outdated}
+        end
+
+      _ ->
+        {:error, :not_found}
+    end
+  end
+
   # API
 
-  def revoked?(url, serialNumber) do
+  def revoked(url, serialNumber) do
     serialNumber =
       serialNumber
       |> String.upcase()
       |> Base.decode16!()
       |> :binary.decode_unsigned()
 
-    case CrlApi.get_url(url) do
-      %Crl{next_update: nextUpdate} ->
-        case DateTime.compare(nextUpdate, DateTime.utc_now()) do
-          :gt ->
-            case CrlApi.get_serial(url, serialNumber) do
-              nil -> false
-              %RevokedSN{} -> true
-            end
+    case check_revoked?(url, serialNumber) do
+      {:ok, _} = response ->
+        response
+
+      {:error, reason} ->
+        # if url not found in db, we make update synchroniously only once
+        # if it is not succesfull, we count certificate as revoked
+        case GenServer.call(__MODULE__, {:update, url}) do
+          true ->
+            check_revoked?(url, serialNumber)
 
           _ ->
             send(__MODULE__, {:update, url})
-            true
+            {:error, reason}
         end
-
-      _ ->
-        send(__MODULE__, {:update, url})
-        true
     end
   end
 end

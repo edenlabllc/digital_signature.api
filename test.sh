@@ -10,7 +10,7 @@ echo "Build App test image"
 IMAGE=$(docker build -f Dockerfile.test . | tail -1 | awk '{ print $NF }')
 
 echo "Run App test image"
-docker run --rm -it --net ds_test_db $IMAGE /bin/bash -c 'cd /home/digital_signature.api; DB_HOST=ds_test_db mix test test/web/controllers/digital_signatures_controller_test.exs'
+docker run --rm -it --net ds_test_db $IMAGE /bin/bash -c 'cd /home/digital_signature.api; DB_HOST=ds_test_db mix test test/web/controllers/digital_signatures_controller_test.exs:108'
 
 # cleanup
 echo "Cleanup..."

@@ -48,19 +48,18 @@ defmodule DigitalSignature.NifService do
   end
 
   def provider_cert?(certificates_info, timeout) do
+    IO.inspect(certificates_info)
+
     Enum.all?(certificates_info, fn cert_info ->
       %{delta_crl: deltaCrl, serial_number: serialNumber, crl: crl} = cert_info
-      send(CrlService, {:check, deltaCrl})
-      send(CrlService, {:check, crl})
 
-      with {:ok, true} <- ocsp_response(cert_info, timeout) do
-        true
+      with {:ok, true} <- CrlService.revoked(crl, serialNumber),
+           {:ok, true} <- CrlService.revoked(deltaCrl, serialNumber),
+           {:ok, revoked?} <- ocsp_response(cert_info, timeout) do
+        revoked?
       else
-        {:ok, :timeout} ->
-          not (CrlService.revoked?(crl, serialNumber) and CrlService.revoked?(deltaCrl, serialNumber))
-
-        _ ->
-          false
+        {:ok, false} ->
+          true
       end
     end)
   end
@@ -72,7 +71,7 @@ defmodule DigitalSignature.NifService do
            [{"Content-Type", "application/ocsp-request"}],
            timeout: timeout
          ) do
-      {:ok, %HTTPoison.Response{status_code: 200}} ->
+      {:ok, %HTTPoison.Response{status_code: 200, body: _body}} ->
         {:ok, true}
 
       {:error, %HTTPoison.Error{reason: :connect_timeout}} ->
