@@ -10,13 +10,7 @@ defmodule DigitalSignature.CrlApi do
   end
 
   def get_serial(url, serialNumber) do
-    {_t, r} =
-      :timer.tc(fn ->
-        Repo.get_by(RevokedSN, url: url, serial_number: serialNumber)
-      end)
-      |> IO.inspect()
-
-    r
+    Repo.get_by(RevokedSN, url: url, serial_number: serialNumber)
   end
 
   def get_url(url) do

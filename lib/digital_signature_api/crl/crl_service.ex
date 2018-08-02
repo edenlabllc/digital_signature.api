@@ -84,7 +84,7 @@ defmodule DigitalSignature.CrlService do
     case DateTime.diff(nextUpdate, DateTime.utc_now(), :second) do
       n when n < 0 ->
         case Date.diff(Date.utc_today(), nextUpdate) do
-          n when n < max_days_crl_delay ->
+          d when d < max_days_crl_delay ->
             {:ok, 0}
 
           _ ->
@@ -160,7 +160,7 @@ defmodule DigitalSignature.CrlService do
       {:error, reason} ->
         # fil this url for feature requests, with outdated nextUpdate
         CrlApi.write_url(url, Date.add(Date.utc_today(), -1))
-        # send(__MODULE__, {:update, url})
+        send(__MODULE__, {:update, url})
         {:error, reason}
     end
   end

@@ -54,7 +54,7 @@ config :digital_signature_api, DigitalSignature.CrlApi, sn_chunk_limit: 20000
 
 # Configure crl scheduler
 config :digital_signature_api, DigitalSignature.CrlService,
-  crl_process_timeout: 6000,
+  crl_process_timeout: 60000,
   crl_outdayted_days: 14,
   preload_crl: ~w(
     http://uakey.com.ua/list.crl
