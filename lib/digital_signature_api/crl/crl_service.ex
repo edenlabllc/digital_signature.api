@@ -42,8 +42,31 @@ defmodule DigitalSignature.CrlService do
 
   def start_link() do
     started = GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
-    Enum.each(CrlApi.list_urls(), fn %Crl{url: url} -> send(__MODULE__, {:update, url}) end)
+
+    Enum.each(crl_urls(), fn url ->
+      try do
+        GenServer.call(__MODULE__, {:update, url})
+      catch
+        _, reason ->
+          IO.inspect(reason, label: 'reason call fail')
+          send(__MODULE__, {:update, url})
+          {:skip, url}
+      end
+    end)
+
     started
+  end
+
+  def crl_urls do
+    config_urls =
+      :ordsets.from_list(Confex.fetch_env!(:digital_signature_api, DigitalSignature.CrlService)[:preload_crl] || [])
+
+    active_crls =
+      CrlApi.list_urls()
+      |> Enum.map(fn %Crl{url: url} -> url end)
+      |> :ordsets.from_list()
+
+    :ordsets.union([config_urls, active_crls])
   end
 
   def clean_timer(url, state) do
@@ -82,7 +105,6 @@ defmodule DigitalSignature.CrlService do
       {:ok, nextUpdate}
     else
       error ->
-        IO.inspect(error)
         Logger.error(fn -> :io_lib.format("~nError update crl ~s :: ~p~n", [url, error]) end)
         {:error, url}
     end
@@ -121,16 +143,9 @@ defmodule DigitalSignature.CrlService do
         response
 
       {:error, reason} ->
-        # if url not found in db, we make update synchroniously only once
-        # if it is not succesfull, we count certificate as revoked
-        case GenServer.call(__MODULE__, {:update, url}) do
-          true ->
-            check_revoked?(url, serialNumber)
-
-          _ ->
-            send(__MODULE__, {:update, url})
-            {:error, reason}
-        end
+        # fil this url for feature requests
+        send(__MODULE__, {:update, url})
+        {:error, reason}
     end
   end
 end

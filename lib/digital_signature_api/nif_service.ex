@@ -7,7 +7,6 @@ defmodule DigitalSignature.NifService do
   require Logger
 
   @call_response_threshold 100
-  @nif_service Application.get_env(:digital_signature_api, :api_resolvers)[:nif_service]
 
   # Callbacks
   def init(certs_cache_ttl) do
