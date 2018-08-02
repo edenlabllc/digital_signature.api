@@ -1,7 +1,6 @@
 defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
   @moduledoc false
 
-  import Mox
   use DigitalSignature.Web.ConnCase, async: false
   alias DigitalSignature.Cert
   alias DigitalSignature.Repo

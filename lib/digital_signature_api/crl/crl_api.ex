@@ -36,22 +36,32 @@ defmodule DigitalSignature.CrlApi do
     |> where([r], r.url == ^url)
     |> Repo.delete_all()
 
-    revokedSNs =
-      Enum.reduce(serialNumbers, [], fn number, revoked_sns ->
-        [%{url: url, serial_number: Integer.to_string(number)} | revoked_sns]
-      end)
+    serialNumbers
+    |> Enum.reduce([], fn number, revoked_sns ->
+      [%{url: url, serial_number: Integer.to_string(number)} | revoked_sns]
+    end)
+    |> chunk_records([])
+    |> Enum.each(fn revokedSNs ->
+      Repo.insert_all(RevokedSN, revokedSNs, [])
+    end)
+  end
 
-    Repo.insert_all(RevokedSN, revokedSNs, [])
+  @doc """
+  Insert n of records m times, because postgres ecto has
+  limit of input parameters: 65000
+  """
+  def chunk_records([], acc), do: acc
+
+  def chunk_records(list, acc) do
+    chunk_limit = Confex.fetch_env!(:digital_signature_api, __MODULE__)[:sn_chunk_limit]
+    {records, rest} = Enum.split(list, chunk_limit)
+
+    chunk_records(rest, [records | acc])
   end
 
   def update_serials(url, nextUpdate, serialNumbers) do
-    Repo.transaction(
-      fn ->
-        write_url(url, nextUpdate)
-        write_serials(url, serialNumbers)
-      end,
-      []
-    )
+    write_url(url, nextUpdate)
+    write_serials(url, serialNumbers)
   end
 
   def crl_changeset(%Crl{} = crl, attrs) do

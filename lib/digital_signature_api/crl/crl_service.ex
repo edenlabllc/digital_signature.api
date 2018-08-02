@@ -32,7 +32,7 @@ defmodule DigitalSignature.CrlService do
   def update_url_state(url, state) do
     clean_timer(url, state)
 
-    with {:ok, nextUpdate} <- update_crl(url) do
+    with {:ok, nextUpdate} <- update_crl(url) |> IO.inspect(label: 'update') do
       tref = Process.send_after(__MODULE__, {:update, url}, next_update_time(nextUpdate))
       Map.put(state, url, tref)
     else
@@ -101,7 +101,7 @@ defmodule DigitalSignature.CrlService do
   def update_crl(url) do
     with {:ok, %HTTPoison.Response{status_code: 200, body: data}} <- HTTPoison.get(url),
          {nextUpdate, serialNumbers} <- parse_crl(data) do
-      CrlApi.update_serials(url, nextUpdate, serialNumbers)
+      :timer.tc(fn -> CrlApi.update_serials(url, nextUpdate, serialNumbers) end) |> IO.inspect(label: 'update in db')
       {:ok, nextUpdate}
     else
       error ->

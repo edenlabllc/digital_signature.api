@@ -52,8 +52,8 @@ defmodule DigitalSignature.NifService do
     Enum.all?(certificates_info, fn cert_info ->
       %{delta_crl: deltaCrl, serial_number: serialNumber, crl: crl} = cert_info
 
-      with {:ok, false} <- CrlService.revoked(crl, serialNumber),
-           {:ok, false} <- CrlService.revoked(deltaCrl, serialNumber),
+      with true <- {:ok, true} != CrlService.revoked(crl, serialNumber),
+           true <- {:ok, true} != CrlService.revoked(deltaCrl, serialNumber),
            {:ok, revoked?} <- ocsp_response(cert_info, timeout) do
         revoked?
       else

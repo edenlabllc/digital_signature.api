@@ -49,6 +49,9 @@ config :logger, :console,
 
 config :phoenix, :format_encoders, json: Jason
 
+# Configure crl api
+config :digital_signature_api, DigitalSignature.CrlApi, sn_chunk_limit: 20000
+
 # Configure crl scheduler
 config :digital_signature_api, DigitalSignature.CrlService, preload_crl: ~w(
   http://uakey.com.ua/list.crl
