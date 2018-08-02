@@ -55,7 +55,7 @@ defmodule DigitalSignature.CrlService do
         error, reason ->
           Logger.error(:io_lib.format("Error receiving ~s ~p : ~p", [url, error, reason]))
 
-          send(__MODULE__, {:update, url})
+          # send(__MODULE__, {:update, url})
           acc
       end
     end)

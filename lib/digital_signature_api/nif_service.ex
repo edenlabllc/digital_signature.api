@@ -21,8 +21,6 @@ defmodule DigitalSignature.NifService do
         _from,
         {certs_cache_ttl, certs}
       ) do
-    IO.inspect({expires_at, NaiveDateTime.utc_now()})
-
     processing_result =
       if NaiveDateTime.compare(expires_at, NaiveDateTime.utc_now()) == :gt do
         nif_process_signed_content(signed_content, signed_data, certs, check)
