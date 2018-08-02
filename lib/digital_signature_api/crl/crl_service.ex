@@ -46,18 +46,14 @@ defmodule DigitalSignature.CrlService do
     timeout = Confex.fetch_env!(:digital_signature_api, DigitalSignature.CrlService)[:crl_process_timeout]
 
     crl_urls()
-    |> Enum.reduce([], fn url, acc ->
+    |> Enum.each(fn url ->
       try do
-        task = Task.async(fn -> GenServer.call(__MODULE__, {:update, url}, timeout) end)
-        [task | acc]
+        GenServer.call(__MODULE__, {:update, url}, timeout)
       catch
         error, reason ->
           Logger.error(:io_lib.format("Error receiving ~s ~p : ~p", [url, error, reason]))
-
-          acc
       end
     end)
-    |> Enum.each(fn task -> Task.await(task, timeout) end)
 
     started
   end
@@ -164,7 +160,7 @@ defmodule DigitalSignature.CrlService do
       {:error, reason} ->
         # fil this url for feature requests, with outdated nextUpdate
         CrlApi.write_url(url, Date.add(Date.utc_today(), -1))
-        send(__MODULE__, {:update, url})
+        # send(__MODULE__, {:update, url})
         {:error, reason}
     end
   end
