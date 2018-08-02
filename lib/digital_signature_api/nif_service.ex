@@ -25,6 +25,8 @@ defmodule DigitalSignature.NifService do
       if NaiveDateTime.compare(expires_at, NaiveDateTime.utc_now()) == :gt do
         nif_process_signed_content(signed_content, signed_data, certs, check)
       else
+        IO.inspect(NaiveDateTime.diff(NaiveDateTime.utc_now(), expires_at, :millisecond))
+
         Logger.info("NifService message queue timeout")
         {:error, {:nif_service_timeout, "messaqe queue timeout"}}
       end
@@ -59,10 +61,6 @@ defmodule DigitalSignature.NifService do
         {:error, reason} when reason in ~w(outdated not_found)a ->
           {:ok, revoked?} = ocsp_response(cert_info, timeout)
           revoked?
-
-        _error ->
-          Logger.error("Error crl check #{serialNumber}, crl: #{crl}, deltaCrl: #{deltaCrl}")
-          false
       end
     end)
   end
@@ -108,7 +106,7 @@ defmodule DigitalSignature.NifService do
   end
 
   def process_signed_content(signed_content, check) do
-    timeout = Confex.fetch_env!(:digital_signature_api, :nif_service_call_timeout)
+    timeout = Confex.fetch_env!(:digital_signature_api, :service_call_timeout)
     ocs_timeout = Confex.fetch_env!(:digital_signature_api, :ocs_timeout)
 
     expires_at = NaiveDateTime.add(NaiveDateTime.utc_now(), timeout - @call_response_threshold, :millisecond)
@@ -149,7 +147,6 @@ defmodule DigitalSignature.NifService do
       end
     catch
       :exit, {:timeout, error} ->
-        Logger.info("NifService call timeout")
         {:error, {:nif_service_timeout, error}}
     end
   end

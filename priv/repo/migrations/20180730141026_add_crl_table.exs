@@ -16,6 +16,8 @@ defmodule DigitalSignature.Repo.Migrations.AddCrlTables do
       add(:id, :uuid, primary_key: true)
       add(:url, :string, null: false)
       add(:serial_number, :string, null: false)
+
+      index(:revoked, [:serial_number, :url])
     end
   end
 

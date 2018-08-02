@@ -49,13 +49,11 @@ defmodule DigitalSignature.CrlService do
     |> Enum.reduce([], fn url, acc ->
       try do
         task = Task.async(fn -> GenServer.call(__MODULE__, {:update, url}, timeout) end)
-        Logger.info("CRL #{url} successfully stored in database")
         [task | acc]
       catch
         error, reason ->
           Logger.error(:io_lib.format("Error receiving ~s ~p : ~p", [url, error, reason]))
 
-          # send(__MODULE__, {:update, url})
           acc
       end
     end)
@@ -159,13 +157,7 @@ defmodule DigitalSignature.CrlService do
   # API
 
   def revoked(url, serialNumber) do
-    serialNumber =
-      serialNumber
-      |> String.upcase()
-      |> Base.decode16!()
-      |> :binary.decode_unsigned()
-
-    case check_revoked?(url, serialNumber) do
+    case check_revoked?(url, String.upcase(serialNumber)) do
       {:ok, _} = response ->
         response
 

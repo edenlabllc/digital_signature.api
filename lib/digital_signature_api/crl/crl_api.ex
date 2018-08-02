@@ -10,7 +10,7 @@ defmodule DigitalSignature.CrlApi do
   end
 
   def get_serial(url, serialNumber) do
-    Repo.get_by(RevokedSN, url: url, serial_number: Integer.to_string(serialNumber))
+    Repo.get_by(RevokedSN, url: url, serial_number: serialNumber)
   end
 
   def get_url(url) do

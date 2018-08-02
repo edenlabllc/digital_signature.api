@@ -187,33 +187,21 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       data = get_data("test/fixtures/hello.json")
       request = create_request(data)
 
-      codes =
-        1..25
-        |> Enum.map(fn _ ->
-          Task.async(fn ->
-            conn
-            |> post(digital_signatures_path(conn, :index), request)
-          end)
+      1..25
+      |> Enum.map(fn _ ->
+        Task.async(fn ->
+          conn
+          |> post(digital_signatures_path(conn, :index), request)
         end)
-        |> Enum.map(fn task ->
-          resp =
-            %Plug.Conn{status: code} =
-            task
-            |> Task.await()
+      end)
+      |> Enum.each(fn task ->
+        resp =
+          task
+          |> Task.await()
+          |> json_response(200)
 
-          case code do
-            200 ->
-              resp = json_response(resp, 200)
-              assert List.first(resp["data"]["signatures"])["is_valid"]
-
-              code
-
-            _ ->
-              code
-          end
-        end)
-
-      assert 200 in codes
+        assert List.first(resp["data"]["signatures"])["is_valid"]
+      end)
     end
 
     @tag :pending
@@ -221,7 +209,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       data = get_data("test/fixtures/hello.json")
       request = create_request(data)
 
-      System.put_env("NIF_SERVICE_CALL_TIMEOUT", "10")
+      System.put_env("SERVICE_CALL_TIMEOUT", "10")
 
       Enum.map(1..10, fn _ ->
         Task.async(fn ->
@@ -234,7 +222,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
         |> json_response(424)
       end)
 
-      System.delete_env("NIF_SERVICE_CALL_TIMEOUT")
+      System.delete_env("SERVICE_CALL_TIMEOUT")
     end
 
     @tag :pending
@@ -242,7 +230,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       data = get_data("test/fixtures/hello.json")
       request = create_request(data)
 
-      System.put_env("NIF_SERVICE_CALL_TIMEOUT", "110")
+      System.put_env("SERVICE_CALL_TIMEOUT", "110")
 
       Enum.map(1..100, fn _ ->
         Task.async(fn ->
@@ -257,7 +245,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
         assert code in [200, 424]
       end)
 
-      System.delete_env("NIF_SERVICE_CALL_TIMEOUT")
+      System.delete_env("SERVICE_CALL_TIMEOUT")
 
       conn
       |> post(digital_signatures_path(conn, :index), request)
