@@ -12,7 +12,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesController do
   def index(conn, params) do
     with :ok <- validate_schema(:digital_signatures, params),
          {:ok, signed_content} <- Base.decode64(Map.get(params, "signed_content")),
-         {:ok, result} <- DigitalSignatureAPI.process_signed_content(signed_content, Map.get(params, "check")) do
+         {:ok, result} <- DigitalSignatureAPI.process_signed_content(signed_content, Map.get(params, "check", true)) do
       render_response(result, params, conn)
     else
       :error ->

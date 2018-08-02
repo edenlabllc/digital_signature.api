@@ -32,8 +32,9 @@ defmodule DigitalSignature.CrlService do
   def update_url_state(url, state) do
     clean_timer(url, state)
 
-    with {:ok, nextUpdate} <- update_crl(url) do
-      tref = Process.send_after(__MODULE__, {:update, url}, next_update_time(nextUpdate))
+    with {:ok, nextUpdate} <- update_crl(url),
+         {:ok, nt} <- next_update_time(nextUpdate) do
+      tref = Process.send_after(__MODULE__, {:update, url}, nt)
       Map.put(state, url, tref)
     else
       _ -> state
@@ -51,7 +52,9 @@ defmodule DigitalSignature.CrlService do
         Logger.info("CRL #{url} successfully stored in database")
         [task | acc]
       catch
-        _error, _reason ->
+        error, reason ->
+          Logger.error(:io_lib.format("Error receiving ~s ~p : ~p", [url, error, reason]))
+
           send(__MODULE__, {:update, url})
           acc
       end
@@ -82,9 +85,21 @@ defmodule DigitalSignature.CrlService do
   end
 
   def next_update_time(nextUpdate) do
+    max_days_crl_delay = Confex.fetch_env!(:digital_signature_api, DigitalSignature.CrlService)[:preload_crl]
+
     case DateTime.diff(nextUpdate, DateTime.utc_now(), :second) do
-      n when n < 0 -> 0
-      n -> n
+      n when n < 0 ->
+        case Date.diff(Date.utc_today(), nextUpdate) do
+          n when n < max_days_crl_delay ->
+            {:ok, 0}
+
+          _ ->
+            # Suspicious crl file, probaply this url never be updated, skip it
+            {:error, :outdated}
+        end
+
+      n ->
+        {:ok, n}
     end
   end
 

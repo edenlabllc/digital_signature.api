@@ -21,9 +21,10 @@ defmodule DigitalSignature.NifService do
         _from,
         {certs_cache_ttl, certs}
       ) do
+    IO.inspect({expires_at, NaiveDateTime.utc_now()})
+
     processing_result =
       if NaiveDateTime.compare(expires_at, NaiveDateTime.utc_now()) == :gt do
-        check = unless is_boolean(check), do: true
         nif_process_signed_content(signed_content, signed_data, certs, check)
       else
         Logger.info("NifService message queue timeout")
@@ -47,8 +48,6 @@ defmodule DigitalSignature.NifService do
   end
 
   def provider_cert?(certificates_info, timeout) do
-    IO.inspect(certificates_info)
-
     Enum.all?(certificates_info, fn cert_info ->
       %{delta_crl: deltaCrl, serial_number: serialNumber, crl: crl} = cert_info
 

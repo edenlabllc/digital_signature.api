@@ -27,8 +27,3 @@ config :digital_signature_api, DigitalSignature.Repo,
   hostname: System.get_env("DB_HOST"),
   pool: Ecto.Adapters.SQL.Sandbox,
   ownership_timeout: 120_000_000
-
-# Configure crl scheduler
-# config :digital_signature_api, DigitalSignature.CrlService, preload_crl: ~w(
-# https://www.masterkey.ua/ca/crls/CA-F3E31D2E-Full.crl
-#     )
