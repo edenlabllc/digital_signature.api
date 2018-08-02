@@ -46,7 +46,7 @@ defmodule DigitalSignature.NifService do
     end
   end
 
-  def provider_cert?(certificates_info, timeout) do
+  def provider_cert?(certificates_info, _timeout) do
     IO.inspect(certificates_info)
 
     Enum.all?(certificates_info, fn cert_info ->

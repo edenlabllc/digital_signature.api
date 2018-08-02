@@ -42,19 +42,21 @@ defmodule DigitalSignature.CrlService do
 
   def start_link() do
     started = GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
+    timeout = 60000
 
     crl_urls()
-    |> Enum.each(fn url ->
+    |> Enum.reduce([], fn url, acc ->
       try do
-        GenServer.call(__MODULE__, {:update, url}, 60000)
+        task = Task.async(fn -> GenServer.call(__MODULE__, {:update, url}, timeout) end)
         Logger.info("CRL #{url} successfully stored in database")
+        [task | acc]
       catch
         _, reason ->
-          IO.inspect(reason, label: 'reason call fail')
           send(__MODULE__, {:update, url})
-          {:skip, url}
+          acc
       end
     end)
+    |> Enum.each(fn task -> Task.await(task, timeout) end)
 
     started
   end
@@ -91,8 +93,8 @@ defmodule DigitalSignature.CrlService do
       try do
         :public_key.der_decode(:CertificateList, data)
       catch
-        error, reason ->
-          {error, reason}
+        _error, _reason ->
+          {:error, :decode}
       end
 
     with {:CertificateList, {:TBSCertList, _, _, _, _, {:utcTime, nextUpdateTs}, revokedCertificates, _}, _, _} <-
@@ -104,13 +106,13 @@ defmodule DigitalSignature.CrlService do
           [userCertificate | serialNumbers]
         end)
 
-      {nextUpdate, revokedSerialNumbers}
+      {:ok, nextUpdate, revokedSerialNumbers}
     end
   end
 
   def update_crl(url) do
     with {:ok, %HTTPoison.Response{status_code: 200, body: data}} <- HTTPoison.get(url),
-         {nextUpdate, serialNumbers} <- parse_crl(data) do
+         {:ok, nextUpdate, serialNumbers} <- parse_crl(data) do
       CrlApi.update_serials(url, nextUpdate, serialNumbers)
       {:ok, nextUpdate}
     else

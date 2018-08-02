@@ -30,12 +30,5 @@ config :digital_signature_api, DigitalSignature.Repo,
 
 # Configure crl scheduler
 # config :digital_signature_api, DigitalSignature.CrlService, preload_crl: ~w(
-#     http://uakey.com.ua/list.crl
-#     http://uakey.com.ua/list-delta.crl
-#
-#     http://acsk.privatbank.ua/crldelta/PB-Delta-S9.crl
-#     http://acsk.privatbank.ua/crl/PB-S9.crl
-#
-#     http://acskidd.gov.ua/download/crls/CA-20B4E4ED-Full.crl
-#     http://acskidd.gov.ua/download/crls/CA-20B4E4ED-Delta.crl
+# https://www.masterkey.ua/ca/crls/CA-F3E31D2E-Full.crl
 #     )
