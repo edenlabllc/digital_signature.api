@@ -42,7 +42,7 @@ defmodule DigitalSignature.CrlService do
 
   def start_link() do
     started = GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
-    timeout = 60000
+    timeout = Confex.fetch_env!(:digital_signature_api, DigitalSignature.CrlService)[:crl_process_timeout]
 
     crl_urls()
     |> Enum.reduce([], fn url, acc ->
@@ -51,7 +51,7 @@ defmodule DigitalSignature.CrlService do
         Logger.info("CRL #{url} successfully stored in database")
         [task | acc]
       catch
-        _, reason ->
+        _error, _reason ->
           send(__MODULE__, {:update, url})
           acc
       end

@@ -46,19 +46,26 @@ defmodule DigitalSignature.NifService do
     end
   end
 
-  def provider_cert?(certificates_info, _timeout) do
+  def provider_cert?(certificates_info, timeout) do
     IO.inspect(certificates_info)
 
     Enum.all?(certificates_info, fn cert_info ->
       %{delta_crl: deltaCrl, serial_number: serialNumber, crl: crl} = cert_info
 
-      # {:ok, revoked?} <- ocsp_response(cert_info, timeout)
-      with true <- {:ok, true} != CrlService.revoked(crl, serialNumber),
-           true <- {:ok, true} != CrlService.revoked(deltaCrl, serialNumber) do
-        false
+      with {:ok, false} <- CrlService.revoked(crl, serialNumber),
+           {:ok, false} <- CrlService.revoked(deltaCrl, serialNumber) do
+        true
       else
-        false ->
-          true
+        {:ok, true} ->
+          false
+
+        {:error, reason} when reason in ~w(outdated not_found)a ->
+          {:ok, revoked?} = ocsp_response(cert_info, timeout)
+          revoked?
+
+        _error ->
+          Logger.error("Error crl check #{serialNumber}, crl: #{crl}, deltaCrl: #{deltaCrl}")
+          false
       end
     end)
   end
@@ -71,7 +78,7 @@ defmodule DigitalSignature.NifService do
            timeout: timeout
          ) do
       {:ok, %HTTPoison.Response{status_code: 200, body: _body}} ->
-        # TODO: asn.1 decode
+        # TODO: asn.1 decode or nif
         # {ok, {_, _, {_,T, R}}} = 'OCSP':decode('OCSPResponse', Data)
         # 'OCSP':decode('OCSPResponse', R)
         {:ok, true}
