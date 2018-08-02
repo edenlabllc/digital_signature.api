@@ -32,7 +32,7 @@ defmodule DigitalSignature.CrlService do
   def update_url_state(url, state) do
     clean_timer(url, state)
 
-    with {:ok, nextUpdate} <- update_crl(url) |> IO.inspect(label: 'update') do
+    with {:ok, nextUpdate} <- update_crl(url) do
       tref = Process.send_after(__MODULE__, {:update, url}, next_update_time(nextUpdate))
       Map.put(state, url, tref)
     else
@@ -43,9 +43,11 @@ defmodule DigitalSignature.CrlService do
   def start_link() do
     started = GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
 
-    Enum.each(crl_urls(), fn url ->
+    crl_urls()
+    |> Enum.each(fn url ->
       try do
-        GenServer.call(__MODULE__, {:update, url})
+        GenServer.call(__MODULE__, {:update, url}, 60000)
+        Logger.info("CRL #{url} successfully stored in database")
       catch
         _, reason ->
           IO.inspect(reason, label: 'reason call fail')
@@ -85,8 +87,16 @@ defmodule DigitalSignature.CrlService do
   end
 
   def parse_crl(data) do
+    parsed =
+      try do
+        :public_key.der_decode(:CertificateList, data)
+      catch
+        error, reason ->
+          {error, reason}
+      end
+
     with {:CertificateList, {:TBSCertList, _, _, _, _, {:utcTime, nextUpdateTs}, revokedCertificates, _}, _, _} <-
-           :public_key.der_decode(:CertificateList, data),
+           parsed,
          {:ok, nextUpdate} <- convert_date(nextUpdateTs) do
       revokedSerialNumbers =
         Enum.reduce(revokedCertificates, [], fn {:TBSCertList_revokedCertificates_SEQOF, userCertificate, _, _},
@@ -101,7 +111,7 @@ defmodule DigitalSignature.CrlService do
   def update_crl(url) do
     with {:ok, %HTTPoison.Response{status_code: 200, body: data}} <- HTTPoison.get(url),
          {nextUpdate, serialNumbers} <- parse_crl(data) do
-      :timer.tc(fn -> CrlApi.update_serials(url, nextUpdate, serialNumbers) end) |> IO.inspect(label: 'update in db')
+      CrlApi.update_serials(url, nextUpdate, serialNumbers)
       {:ok, nextUpdate}
     else
       error ->
@@ -143,7 +153,8 @@ defmodule DigitalSignature.CrlService do
         response
 
       {:error, reason} ->
-        # fil this url for feature requests
+        # fil this url for feature requests, with outdated nextUpdate
+        CrlApi.write_url(url, Date.add(Date.utc_today(), -1))
         send(__MODULE__, {:update, url})
         {:error, reason}
     end
