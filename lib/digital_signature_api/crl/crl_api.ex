@@ -10,7 +10,7 @@ defmodule DigitalSignature.CrlApi do
   end
 
   def get_serial(url, serialNumber) do
-    Repo.get_by(RevokedSN, url: url, serial_number: serialNumber)
+    Repo.get_by(RevokedSN, url: url, serial_number: Integer.to_string(serialNumber))
   end
 
   def get_url(url) do
@@ -38,7 +38,7 @@ defmodule DigitalSignature.CrlApi do
 
     serialNumbers
     |> Enum.reduce([], fn number, revoked_sns ->
-      [%{url: url, serial_number: Integer.to_string(number, 16)} | revoked_sns]
+      [%{url: url, serial_number: Integer.to_string(number)} | revoked_sns]
     end)
     |> chunk_records([])
     |> Enum.each(fn revokedSNs ->

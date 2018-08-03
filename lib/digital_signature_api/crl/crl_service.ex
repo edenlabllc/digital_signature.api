@@ -153,7 +153,13 @@ defmodule DigitalSignature.CrlService do
   # API
 
   def revoked(url, serialNumber) do
-    case check_revoked?(url, String.upcase(serialNumber)) do
+    serialNumber =
+      serialNumber
+      |> String.upcase()
+      |> Base.decode16!()
+      |> :binary.decode_unsigned()
+
+    case check_revoked?(url, serialNumber) do
       {:ok, _} = response ->
         response
 

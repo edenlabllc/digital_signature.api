@@ -25,8 +25,6 @@ defmodule DigitalSignature.NifService do
       if NaiveDateTime.compare(expires_at, NaiveDateTime.utc_now()) == :gt do
         nif_process_signed_content(signed_content, signed_data, certs, check)
       else
-        IO.inspect(NaiveDateTime.diff(NaiveDateTime.utc_now(), expires_at, :millisecond))
-
         Logger.info("NifService message queue timeout")
         {:error, {:nif_service_timeout, "messaqe queue timeout"}}
       end

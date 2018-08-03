@@ -3,9 +3,9 @@ defmodule DigitalSignature.RevokedTest do
 
   use ExUnit.Case
 
-  describe "create otp" do
-    test "hello" do
-      assert 1 == 1
+  describe "crl service check" do
+    test "test" do
+      assert true
     end
   end
 end
