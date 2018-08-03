@@ -104,6 +104,20 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       assert resp["data"]["content"] == %{"hello" => "world"}
     end
 
+    test "processing signed with revoked Privat personal key", %{conn: conn} do
+      data = get_data("test/fixtures/hello_revoked.json")
+      request = create_request(data)
+
+      resp =
+        conn
+        |> post(digital_signatures_path(conn, :index), request)
+        |> json_response(200)
+
+      [signature] = resp["data"]["signatures"]
+      refute signature["is_valid"]
+      assert "OCSP certificate verificaton failed" == signature["validation_error_message"]
+    end
+
     test "processing signed valid data works (uakey)", %{conn: conn} do
       data = get_data("test/fixtures/uakey.json")
       request = create_request(data)
@@ -173,7 +187,8 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       data = get_data("test/fixtures/hello.json")
       request = create_request(data)
 
-      Enum.map(1..25, fn _ ->
+      1..25
+      |> Enum.map(fn _ ->
         Task.async(fn ->
           conn
           |> post(digital_signatures_path(conn, :index), request)
@@ -194,7 +209,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       data = get_data("test/fixtures/hello.json")
       request = create_request(data)
 
-      System.put_env("NIF_SERVICE_CALL_TIMEOUT", "10")
+      System.put_env("SERVICE_CALL_TIMEOUT", "10")
 
       Enum.map(1..10, fn _ ->
         Task.async(fn ->
@@ -207,7 +222,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
         |> json_response(424)
       end)
 
-      System.delete_env("NIF_SERVICE_CALL_TIMEOUT")
+      System.delete_env("SERVICE_CALL_TIMEOUT")
     end
 
     @tag :pending
@@ -215,7 +230,7 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
       data = get_data("test/fixtures/hello.json")
       request = create_request(data)
 
-      System.put_env("NIF_SERVICE_CALL_TIMEOUT", "110")
+      System.put_env("SERVICE_CALL_TIMEOUT", "110")
 
       Enum.map(1..100, fn _ ->
         Task.async(fn ->
@@ -223,12 +238,14 @@ defmodule DigitalSignature.Web.DigitalSignaturesControllerTest do
         end)
       end)
       |> Enum.each(fn task ->
-        task
-        |> Task.await()
-        |> json_response(424)
+        %Plug.Conn{status: code} =
+          task
+          |> Task.await()
+
+        assert code in [200, 424]
       end)
 
-      System.delete_env("NIF_SERVICE_CALL_TIMEOUT")
+      System.delete_env("SERVICE_CALL_TIMEOUT")
 
       conn
       |> post(digital_signatures_path(conn, :index), request)
