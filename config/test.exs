@@ -1,5 +1,8 @@
 use Mix.Config
 
+# General application configuration
+config :digital_signature_api, api_resolvers: [nif_service: NifServiceMock]
+
 # Configuration for test environment
 config :ex_unit, capture_log: true
 
@@ -21,6 +24,22 @@ config :digital_signature_api, DigitalSignature.Repo,
   username: "postgres",
   password: "postgres",
   database: "digital_signature_api_test",
+  pool_timeout: 1000,
+  timeout: 1000,
   hostname: System.get_env("DB_HOST"),
   pool: Ecto.Adapters.SQL.Sandbox,
   ownership_timeout: 120_000_000
+
+config :digital_signature_api, DigitalSignature.CrlService,
+  crl_process_timeout: 60000,
+  crl_outdayted_days: 14,
+  preload_crl: ~w(
+      http://uakey.com.ua/list.crl
+      http://uakey.com.ua/list-delta.crl
+
+      http://acsk.privatbank.ua/crldelta/PB-Delta-S9.crl
+      http://acsk.privatbank.ua/crl/PB-S9.crl
+
+      http://acskidd.gov.ua/download/crls/CA-20B4E4ED-Full.crl
+      http://acskidd.gov.ua/download/crls/CA-20B4E4ED-Delta.crl
+      )

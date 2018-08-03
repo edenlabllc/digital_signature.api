@@ -10,6 +10,9 @@
       "enum": [
         "base64"
       ]
+    },
+    "check": {
+      "type": "boolean"
     }
   },
   "required": [
