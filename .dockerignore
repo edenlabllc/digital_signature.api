@@ -1,6 +1,10 @@
 # The directory Mix will write compiled artifacts to.
 _build
 
+# Ignore Make artefacts
+c_src/*.o
+priv/digital_signature_lib_nif.so*
+
 # The directory Mix downloads your dependencies sources to.
 deps
 
@@ -46,4 +50,3 @@ test.sh
 # Ignore misc artefacts
 .elixir_ls
 .vscode
-
